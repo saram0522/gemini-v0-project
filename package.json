@@ -1,0 +1,15 @@
+{
+  "name": "gemini-proxy-server",
+  "version": "1.0.0",
+  "description": "A proxy server for the Gemini API.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "node-fetch": "^2.7.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5"
+  }
+}

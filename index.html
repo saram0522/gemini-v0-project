@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gemini Web Designer</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap');
+
+        :root {
+            --text-color-dark: #e0e0e0;
+            --background-dark: linear-gradient(135deg, #101828, #26042c);
+            --glass-bg-dark: rgba(255, 255, 255, 0.05);
+            --glass-border-dark: rgba(255, 255, 255, 0.1);
+            --input-bg-dark: rgba(0,0,0,0.2);
+            --panel-bg-dark: transparent;
+
+            --text-color-light: #1f2937;
+            --background-light: linear-gradient(135deg, #f0f9ff, #f3e8ff);
+            --glass-bg-light: rgba(255, 255, 255, 0.4);
+            --glass-border-light: rgba(0, 0, 0, 0.1);
+            --input-bg-light: rgba(255,255,255,0.5);
+            --panel-bg-light: rgba(255, 255, 255, 0.2);
+
+            --primary-color: #6a5acd; /* SlateBlue */
+            --primary-color-hover: #5a4acd;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            transition: background 0.3s ease, color 0.3s ease;
+        }
+
+        body[data-theme='dark'] {
+            background: var(--background-dark);
+            color: var(--text-color-dark);
+        }
+
+        body[data-theme='light'] {
+            background: var(--background-light);
+            color: var(--text-color-light);
+        }
+
+        .container {
+            display: flex;
+            width: 100%;
+            height: 100vh;
+            padding: 2rem;
+            box-sizing: border-box;
+        }
+
+        .panel {
+            border-radius: 16px;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            display: flex;
+            flex-direction: column;
+            transition: background 0.3s ease, border 0.3s ease;
+        }
+
+        body[data-theme='dark'] .panel {
+            background: var(--glass-bg-dark);
+            border: 1px solid var(--glass-border-dark);
+        }
+
+        body[data-theme='light'] .panel {
+            background: var(--glass-bg-light);
+            border: 1px solid var(--glass-border-light);
+        }
+
+        .input-panel {
+            width: 30%;
+            margin-right: 2rem;
+            padding: 1.5rem;
+        }
+
+        .input-panel h2 {
+            margin-top: 0;
+            font-weight: 700;
+            padding-bottom: 1rem;
+            margin-bottom: 1rem;
+            border-bottom: 1px solid;
+        }
+        body[data-theme='dark'] .input-panel h2 { border-color: var(--glass-border-dark); }
+        body[data-theme='light'] .input-panel h2 { border-color: var(--glass-border-light); }
+
+        #ai-chat-log {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding-right: 10px;
+            margin-bottom: 1rem;
+        }
+
+        .ai-message {
+            padding: 0.75rem 1rem;
+            border-radius: 10px;
+            margin-bottom: 0.75rem;
+            max-width: 90%;
+            line-height: 1.5;
+        }
+
+        body[data-theme='dark'] .ai-message {
+            background: rgba(0,0,0,0.2);
+        }
+        body[data-theme='light'] .ai-message {
+            background: rgba(255,255,255,0.6);
+            color: #374151;
+        }
+
+        .prompt-area {
+            margin-top: auto;
+        }
+
+        textarea#prompt-input {
+            width: 100%;
+            height: 80px;
+            resize: none;
+            border-radius: 8px;
+            padding: 1rem;
+            font-family: "SF Mono", "Fira Code", monospace;
+            font-size: 1rem;
+            box-sizing: border-box;
+            transition: background 0.3s ease, border 0.3s ease, color 0.3s ease;
+        }
+
+        body[data-theme='dark'] textarea#prompt-input {
+            background-color: var(--input-bg-dark);
+            color: var(--text-color-dark);
+            border: 1px solid var(--glass-border-dark);
+        }
+        body[data-theme='light'] textarea#prompt-input {
+            background-color: var(--input-bg-light);
+            color: var(--text-color-light);
+            border: 1px solid var(--glass-border-light);
+        }
+
+        textarea#prompt-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px var(--primary-color-hover);
+        }
+
+        button#generate-btn {
+            width: 100%;
+            margin-top: 1rem;
+            padding: 0.85rem 1.5rem;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: background-color 0.2s ease, transform 0.1s ease;
+        }
+        button#generate-btn:hover { background-color: var(--primary-color-hover); }
+        button#generate-btn:active { transform: scale(0.98); }
+
+        .output-panel {
+            width: 70%;
+            padding: 0;
+        }
+        
+        .output-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 1.5rem;
+            border-bottom: 1px solid;
+        }
+        body[data-theme='dark'] .output-header { border-color: var(--glass-border-dark); }
+        body[data-theme='light'] .output-header { border-color: var(--glass-border-light); }
+
+        .tab-btn {
+            background: none;
+            border: none;
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: opacity 0.2s ease, color 0.2s ease;
+            border-bottom: 2px solid transparent;
+        }
+        body[data-theme='dark'] .tab-btn { color: var(--text-color-dark); opacity: 0.6; }
+        body[data-theme='light'] .tab-btn { color: var(--text-color-light); opacity: 0.6; }
+        .tab-btn.active {
+            opacity: 1;
+            border-bottom: 2px solid var(--primary-color);
+        }
+        body[data-theme='dark'] .tab-btn.active { color: white; }
+        body[data-theme='light'] .tab-btn.active { color: #000; }
+
+        #theme-toggle {
+            background: none;
+            border: 1px solid;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            font-size: 1.5rem;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: background 0.2s ease, border-color 0.3s ease;
+        }
+        body[data-theme='dark'] #theme-toggle { border-color: var(--glass-border-dark); color: #fff; }
+        body[data-theme='light'] #theme-toggle { border-color: var(--glass-border-light); color: #000; }
+        body[data-theme='dark'] #theme-toggle:hover { background: rgba(255,255,255,0.1); }
+        body[data-theme='light'] #theme-toggle:hover { background: rgba(0,0,0,0.1); }
+
+        .view-content { flex-grow: 1; overflow: hidden; padding: 1.5rem; box-sizing: border-box; }
+        .content-panel { width: 100%; height: 100%; display: none; }
+        .content-panel.active { display: block; }
+
+        iframe#preview-output { width: 100%; height: 100%; border: none; border-radius: 8px; background-color: #fff; }
+
+        pre#code-canvas {
+            height: 100%;
+            box-sizing: border-box;
+            overflow: auto;
+            margin: 0;
+            border-radius: 8px;
+            padding: 1rem;
+            transition: background 0.3s ease, border 0.3s ease;
+        }
+        body[data-theme='dark'] pre#code-canvas { background-color: rgba(0,0,0,0.3); border: 1px solid var(--glass-border-dark); }
+        body[data-theme='light'] pre#code-canvas { background-color: rgba(255,255,255,0.4); border: 1px solid var(--glass-border-light); }
+
+        code#code-output {
+            font-family: "SF Mono", "Fira Code", monospace;
+            font-size: 0.9rem;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            transition: color 0.3s ease;
+        }
+        body[data-theme='dark'] code#code-output { color: #c8d6f5; }
+        body[data-theme='light'] code#code-output { color: #1e293b; }
+
+    </style>
+</head>
+<body data-theme="dark">
+    <div class="container">
+        <div class="panel input-panel">
+            <h2>AI Assistant</h2>
+            <div id="ai-chat-log"></div>
+            <div class="prompt-area">
+                <textarea id="prompt-input" placeholder="e.g., A modern login form with email and password fields..."></textarea>
+                <button id="generate-btn">Generate</button>
+            </div>
+        </div>
+        <div class="panel output-panel">
+            <div class="output-header">
+                <div class="tabs">
+                    <button class="tab-btn active" data-view="preview">Preview</button>
+                    <button class="tab-btn" data-view="code">Code</button>
+                </div>
+                <button id="theme-toggle">☀️</button>
+            </div>
+            <div class="view-content">
+                <div id="preview-panel" class="content-panel active">
+                    <iframe id="preview-output"></iframe>
+                </div>
+                <div id="code-panel" class="content-panel">
+                    <pre id="code-canvas"><code id="code-output"></code></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- DOM Elements ---
+        const generateBtn = document.getElementById('generate-btn');
+        const promptInput = document.getElementById('prompt-input');
+        const previewOutput = document.getElementById('preview-output');
+        const codeOutput = document.getElementById('code-output');
+        const aiChatLog = document.getElementById('ai-chat-log');
+        const themeToggle = document.getElementById('theme-toggle');
+
+        // --- Theme Switching Logic ---
+        function setInitialTheme() {
+            const savedTheme = localStorage.getItem('theme') || 'dark';
+            document.body.setAttribute('data-theme', savedTheme);
+            themeToggle.textContent = savedTheme === 'dark' ? '☀️' : '🌙';
+        }
+
+        themeToggle.addEventListener('click', () => {
+            let currentTheme = document.body.getAttribute('data-theme');
+            let newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            document.body.setAttribute('data-theme', newTheme);
+            themeToggle.textContent = newTheme === 'dark' ? '☀️' : '🌙';
+            localStorage.setItem('theme', newTheme);
+        });
+
+        // --- View (Tab) Switching Logic ---
+        const tabs = document.querySelectorAll('.tab-btn');
+        const contentPanels = document.querySelectorAll('.content-panel');
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                tabs.forEach(t => t.classList.remove('active'));
+                contentPanels.forEach(p => p.classList.remove('active'));
+                tab.classList.add('active');
+                document.getElementById(`${tab.dataset.view}-panel`).classList.add('active');
+            });
+        });
+
+        // --- AI Chat & Initial State Logic ---
+        function addAiMessage(message) {
+            const msgElement = document.createElement('div');
+            msgElement.className = 'ai-message';
+            msgElement.textContent = message;
+            aiChatLog.appendChild(msgElement);
+            aiChatLog.scrollTop = aiChatLog.scrollHeight; // Auto-scroll to bottom
+        }
+
+        function setInitialView() {
+            document.getElementById('preview-panel').classList.add('active');
+            document.querySelector('.tab-btn[data-view="preview"]').classList.add('active');
+            codeOutput.textContent = "Your generated code will appear here.";
+            previewOutput.srcdoc = `<div style="display: flex; justify-content: center; align-items: center; height: 100%; font-family: Inter, sans-serif; color: #999;">Your component preview will appear here.</div>`;
+            addAiMessage("Hello! Describe the component you want me to build for you.");
+        }
+
+        // --- Gemini API Call Logic (Streaming) ---
+        generateBtn.addEventListener('click', () => {
+            const prompt = promptInput.value;
+            if (!prompt) {
+                addAiMessage("Please describe the component you want to build first.");
+                return;
+            }
+
+            const API_URL = 'https://gilded-croissant-359d6e.netlify.app/.netlify/functions/generate';
+
+            addAiMessage("Got it! Generating your component... This might take a moment.");
+            codeOutput.textContent = ''; // Clear previous code
+            previewOutput.srcdoc = `<div style="display: flex; justify-content: center; align-items: center; height: 100%; font-family: Inter, sans-serif; color: #555;">Generating...</div>`;
+            
+            let fullHtmlContent = '';
+            let buffer = '';
+
+            fetch(API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ prompt: prompt })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`Server error: ${response.status} ${response.statusText}`);
+                }
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+
+                function push() {
+                    reader.read().then(({ done, value }) => {
+                        if (done) {
+                            addAiMessage("Generation complete! Check out the preview and code.");
+                            return;
+                        }
+                        
+                        buffer += decoder.decode(value, { stream: true });
+                        
+                        // Process Server-Sent Events (SSE)
+                        const lines = buffer.split('\n');
+                        buffer = lines.pop(); // Keep the last, possibly incomplete line
+
+                        for (const line of lines) {
+                            if (line.startsWith('data: ')) {
+                                try {
+                                    const json = JSON.parse(line.substring(6));
+                                    if (json.candidates && json.candidates[0].content.parts[0].text) {
+                                        const textChunk = json.candidates[0].content.parts[0].text;
+                                        fullHtmlContent += textChunk;
+                                        codeOutput.textContent = fullHtmlContent.replace(/^```html\s*|```\s*$/g, '').trim();
+                                        previewOutput.srcdoc = codeOutput.textContent;
+                                    }
+                                } catch (e) {
+                                    // Ignore lines that are not valid JSON
+                                }
+                            }
+                        }
+                        push();
+                    });
+                }
+                push();
+            })
+            .catch(error => {
+                const errorMessage = `Error generating code: ${error.message}`;
+                codeOutput.textContent = errorMessage;
+                previewOutput.srcdoc = `<div style="font-family: sans-serif; text-align: center; padding: 2rem; color: red;">${errorMessage}</div>`;
+                addAiMessage(`An error occurred: ${error.message}`);
+            });
+        });
+
+        // --- Initialize App ---
+        window.onload = () => {
+            setInitialTheme();
+            setInitialView();
+        };
+    </script>
+</body>
+</html>
