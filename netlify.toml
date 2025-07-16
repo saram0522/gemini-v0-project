@@ -1,19 +1,12 @@
-# Netlify 빌드 및 배포 설정
 [build]
   publish = "."
   functions = "netlify/functions"
 
-# 함수 관련 설정
-[functions]
-  # 모든 함수(*)에 대해 적용
-  "*" = {
-    # 함수 실행 제한 시간을 26초로 늘립니다.
-    timeout = 26
-  }
-
-# API 요청을 Netlify 함수로 연결하는 리디렉션 규칙
 [[redirects]]
   from = "/api/*"
   to = "/.netlify/functions/:splat"
   status = 200
   force = true
+
+[functions."*"]
+  timeout = 26
