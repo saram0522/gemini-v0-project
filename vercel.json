@@ -1,14 +1,22 @@
 {
-  "routes": [
+  "builds": [
     {
-      "src": "/(.*)",
-      "dest": "/public/$1"
+      "src": "public/**",
+      "use": "@vercel/static-build"
+    },
+    {
+      "src": "proxy-server/index.js",
+      "use": "@vercel/node"
     }
   ],
   "rewrites": [
     {
       "source": "/api/(.*)",
       "destination": "/proxy-server"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/public/$1"
     }
   ]
 }
