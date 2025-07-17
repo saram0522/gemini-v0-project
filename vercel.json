@@ -1,7 +1,7 @@
 {
   "functions": {
     "proxy-server/index.js": {
-      "runtime": "node@18.x"
+      "runtime": "node@20.x"
     }
   },
   "rewrites": [
