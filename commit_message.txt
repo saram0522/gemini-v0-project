@@ -1,1 +1,1 @@
-Fix: Align frontend and backend to use non-streaming API calls
+Feat: Add proxy server code for Vercel deployment
