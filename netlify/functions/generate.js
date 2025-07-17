@@ -1,34 +1,12 @@
-const fetch = require('node-fetch');
-
+// 최종 진단용 함수: 외부 API 호출 없이, 단순히 메시지만 반환합니다.
 exports.handler = async (event) => {
-    // This is a temporary diagnostic function.
-    // It calls a public test API instead of the Gemini API
-    // to check if the Netlify function itself is working correctly.
-    const testApiUrl = 'https://jsonplaceholder.typicode.com/todos/1';
-
     try {
-        const response = await fetch(testApiUrl, {
-            method: 'GET',
-            headers: { 'Content-Type': 'application/json' },
-        });
-
-        if (!response.ok) {
-            const errorText = await response.text();
-            console.error('Test API Error:', errorText);
-            return {
-                statusCode: response.status,
-                body: JSON.stringify({ error: `Test API error: ${errorText}` })
-            };
-        }
-
-        const data = await response.json();
-
-        // Mimic the Gemini response structure so the frontend can display it.
-        const mockGeminiResponse = {
+        // 프론트엔드가 예상하는 Gemini API 응답 구조를 흉내냅니다.
+        const mockResponse = {
             candidates: [{
                 content: {
                     parts: [{
-                        text: ````html\n<!-- Test successful! Received data: -->\n<pre>${JSON.stringify(data, null, 2)}</pre>\n````
+                        text: "```html\n<h1>Hello from Netlify!</h1>\n<p>If you can see this, the function is running correctly.</p>\n```"
                     }]
                 }
             }]
@@ -37,14 +15,15 @@ exports.handler = async (event) => {
         return {
             statusCode: 200,
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(mockGeminiResponse)
+            body: JSON.stringify(mockResponse)
         };
 
     } catch (error) {
-        console.error('Function Error:', error);
+        // 이 코드는 거의 실행될 일이 없지만, 만약을 위해 남겨둡니다.
+        console.error('Basic Function Error:', error);
         return {
             statusCode: 500,
-            body: JSON.stringify({ error: `An error occurred in the function: ${error.message}` })
+            body: JSON.stringify({ error: 'The most basic function failed.' })
         };
     }
 };
