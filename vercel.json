@@ -1,9 +1,4 @@
 {
-  "functions": {
-    "proxy-server/index.js": {
-      "runtime": "node@20.x"
-    }
-  },
   "rewrites": [
     {
       "source": "/api/(.*)",
