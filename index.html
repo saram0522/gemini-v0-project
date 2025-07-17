@@ -349,41 +349,19 @@
                 if (!response.ok) {
                     throw new Error(`Server error: ${response.status} ${response.statusText}`);
                 }
-                const reader = response.body.getReader();
-                const decoder = new TextDecoder();
-
-                function push() {
-                    reader.read().then(({ done, value }) => {
-                        if (done) {
-                            addAiMessage("Generation complete! Check out the preview and code.");
-                            return;
-                        }
-                        
-                        buffer += decoder.decode(value, { stream: true });
-                        
-                        // Process Server-Sent Events (SSE)
-                        const lines = buffer.split('\n');
-                        buffer = lines.pop(); // Keep the last, possibly incomplete line
-
-                        for (const line of lines) {
-                            if (line.startsWith('data: ')) {
-                                try {
-                                    const json = JSON.parse(line.substring(6));
-                                    if (json.candidates && json.candidates[0].content.parts[0].text) {
-                                        const textChunk = json.candidates[0].content.parts[0].text;
-                                        fullHtmlContent += textChunk;
-                                        codeOutput.textContent = fullHtmlContent.replace(/^```html\s*|```\s*$/g, '').trim();
-                                        previewOutput.srcdoc = codeOutput.textContent;
-                                    }
-                                } catch (e) {
-                                    // Ignore lines that are not valid JSON
-                                }
-                            }
-                        }
-                        push();
-                    });
+                return response.json();
+            })
+            .then(data => {
+                if (data.candidates && data.candidates[0].content.parts[0].text) {
+                    const fullHtmlContent = data.candidates[0].content.parts[0].text;
+                    const cleanHtml = fullHtmlContent.replace(/^```html\s*|```\s*$/g, '').trim();
+                    
+                    codeOutput.textContent = cleanHtml;
+                    previewOutput.srcdoc = cleanHtml;
+                    addAiMessage("Generation complete! Check out the preview and code.");
+                } else {
+                    throw new Error("Unexpected API response format.");
                 }
-                push();
             })
             .catch(error => {
                 const errorMessage = `Error generating code: ${error.message}`;
