@@ -15,7 +15,10 @@ app.use(express.json());
 app.post('/api/generate', async (req, res) => {
     const { prompt } = req.body;
     const apiKey = process.env.GEMINI_API_KEY;
+    console.log('DEBUG: API Key loaded:', apiKey ? 'Loaded' : 'Not Loaded');
+    console.log('DEBUG: API Key first 5 chars:', apiKey ? apiKey.substring(0, 5) : 'N/A');
     const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`;
+    console.log('DEBUG: API URL:', apiUrl);
 
     if (!prompt) {
         return res.status(400).json({ error: 'Prompt is required' });
@@ -49,6 +52,8 @@ app.post('/api/generate', async (req, res) => {
         });
 
         const data = await response.json();
+        console.log('DEBUG: Gemini API Response Status:', response.status);
+        console.log('DEBUG: Gemini API Response Data:', data);
         // Gemini API의 응답을 그대로 클라이언트(Netlify 함수)에게 전달합니다.
         res.status(response.status).json(data);
 
