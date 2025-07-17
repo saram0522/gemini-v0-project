@@ -1,1 +1,1 @@
-Feat: Add proxy server code for Vercel deployment
+Fix: Reroute API calls through Vercel proxy
