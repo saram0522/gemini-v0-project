@@ -116,6 +116,8 @@
             overflow-y: auto;
             padding-right: 10px;
             margin-bottom: 1rem;
+            display: flex;
+            flex-direction: column;
         }
 
         .ai-message {
@@ -124,6 +126,18 @@
             margin-bottom: 0.75rem;
             max-width: 90%;
             line-height: 1.5;
+            align-self: flex-start;
+        }
+
+        .user-message {
+            padding: 0.75rem 1rem;
+            border-radius: 10px;
+            margin-bottom: 0.75rem;
+            max-width: 90%;
+            line-height: 1.5;
+            align-self: flex-end;
+            background-color: var(--primary-color);
+            color: white;
         }
 
         body[data-theme='dark'] .ai-message {
@@ -313,7 +327,7 @@
         // --- Speech Synthesis ---
         function speak(text) {
             if (!isSpeechEnabled || !window.speechSynthesis) return;
-            window.speechSynthesis.cancel();
+            window.speechSynthesis.cancel(); // Cancel any previous speech
             const utterance = new SpeechSynthesisUtterance(text);
             utterance.lang = 'ko-KR';
             window.speechSynthesis.speak(utterance);
@@ -355,6 +369,14 @@
         });
 
         // --- AI Chat & Initial State Logic ---
+        function addUserMessage(message) {
+            const msgElement = document.createElement('div');
+            msgElement.className = 'user-message';
+            msgElement.textContent = message;
+            aiChatLog.appendChild(msgElement);
+            aiChatLog.scrollTop = aiChatLog.scrollHeight;
+        }
+
         function addAiMessage(message) {
             const msgElement = document.createElement('div');
             msgElement.className = 'ai-message';
@@ -374,11 +396,14 @@
 
         // --- Gemini API Call Logic (Streaming) ---
         generateBtn.addEventListener('click', async () => {
-            const prompt = promptInput.value;
+            const prompt = promptInput.value.trim();
             if (!prompt) {
                 addAiMessage("Please describe the component you want to build first.");
                 return;
             }
+
+            addUserMessage(prompt);
+            promptInput.value = '';
 
             const API_URL = '/api/generate';
 
@@ -408,13 +433,14 @@
                     const { value, done } = await reader.read();
                     if (done) {
                         const finalCleanHtml = fullHtmlContent.replace(/^```html\s*|```\s*$/g, '').trim();
+                        codeOutput.textContent = finalCleanHtml; // Bug Fix: Update code view on completion
                         previewOutput.srcdoc = finalCleanHtml;
                         addAiMessage("Generation complete! Check out the preview and code.");
                         break;
                     }
 
                     buffer += decoder.decode(value, { stream: true });
-                    const parts = buffer.split(/\\r?\\n/);
+                    const parts = buffer.split(/\r?\n/);
                     buffer = parts.pop();
 
                     for (const part of parts) {
