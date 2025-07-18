@@ -10,5 +10,7 @@
       "source": "/api/(.*)",
       "destination": "/proxy-server"
     }
-  ]
+  ],
+  "public": true,
+  "outputDirectory": "public"
 }
