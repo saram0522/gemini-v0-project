@@ -59,7 +59,50 @@ module.exports = async (req, res) => {
         res.setHeader('Connection', 'keep-alive');
 
         // 응답 스트림을 클라이언트로 파이핑
-        response.body.pipe(res);
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+
+        while (true) {
+            const { value, done } = await reader.read();
+            if (done) break;
+
+            buffer += decoder.decode(value, { stream: true });
+
+            // 완전한 JSON 객체를 찾아서 처리
+            let jsonStartIndex;
+            while ((jsonStartIndex = buffer.indexOf('{')) !== -1) {
+                let jsonEndIndex = -1;
+                let openBraceCount = 0;
+                for (let i = jsonStartIndex; i < buffer.length; i++) {
+                    if (buffer[i] === '{') {
+                        openBraceCount++;
+                    } else if (buffer[i] === '}') {
+                        openBraceCount--;
+                    }
+                    if (openBraceCount === 0 && buffer[i] === '}') {
+                        jsonEndIndex = i;
+                        break;
+                    }
+                }
+
+                if (jsonEndIndex !== -1) {
+                    const jsonString = buffer.substring(jsonStartIndex, jsonEndIndex + 1);
+                    try {
+                        const json = JSON.parse(jsonString);
+                        res.write(JSON.stringify(json) + '\n'); // 각 JSON 객체를 줄바꿈으로 구분하여 전송
+                        buffer = buffer.substring(jsonEndIndex + 1).trim();
+                    } catch (e) {
+                        // 불완전한 JSON이거나 파싱 오류, 다음 청크를 기다림
+                        break;
+                    }
+                } else {
+                    // 완전한 JSON 객체를 찾지 못함, 다음 청크를 기다림
+                    break;
+                }
+            }
+        }
+        res.end();
 
     } catch (error) {
         console.error('Serverless Function Error:', error);
