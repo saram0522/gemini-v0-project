@@ -1,26 +1,6 @@
 {
-  "builds": [
-    
-    "functions": {
-    "proxy-server/index.js": {
-      "runtime": "@vercel/node"
-    }
-  },
-  "builds": [
-    {
-      "src": "public/**",
-      "use": "@vercel/static"
-    }
-  ],
-  ],
   "rewrites": [
-    {
-      "source": "/api/generate",
-      "destination": "/api/proxy-server"
-    },
-    {
-      "source": "/(.*)",
-      "destination": "/public/$1"
-    }
+    { "source": "/api/generate", "destination": "/api/generate.js" },
+    { "source": "/(.*)", "destination": "/public/$1" }
   ]
 }
