@@ -442,7 +442,7 @@
 
                     buffer += decoder.decode(value, { stream: true });
                     console.log('DEBUG: Buffer after decode:', buffer);
-                    const parts = buffer.split(/\n\n/); // SSE 메시지는 이중 줄바꿈으로 구분
+                    const parts = buffer.split(/\n/); // 단일 줄바꿈으로 분리
                     buffer = parts.pop();
 
                     for (const part of parts) {
@@ -450,9 +450,7 @@
                         if (part.trim() === '') continue;
                         
                         let cleanedPart = part.trim();
-                        if (cleanedPart.startsWith('data:')) {
-                            cleanedPart = cleanedPart.substring(5).trim(); // 'data:' 접두사 제거
-                        }
+                        // 'data:' 접두사 제거 로직 제거
                         if (cleanedPart.startsWith(',')) {
                             cleanedPart = cleanedPart.substring(1).trim(); // 선행 쉼표 제거
                         }
