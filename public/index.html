@@ -324,7 +324,7 @@
         }
 
         // --- Gemini API Call Logic (Streaming) ---
-        generateBtn.addEventListener('click', () => {
+        generateBtn.addEventListener('click', async () => {
             const prompt = promptInput.value;
             if (!prompt) {
                 addAiMessage("Please describe the component you want to build first.");
@@ -333,42 +333,79 @@
 
             const API_URL = '/api/generate';
 
-            addAiMessage("Got it! Generating your component... This might take a moment.");
-            codeOutput.textContent = ''; // Clear previous code
+            addAiMessage("Got it! Generating your component in real-time...");
+            codeOutput.textContent = '';
             previewOutput.srcdoc = `<div style="display: flex; justify-content: center; align-items: center; height: 100%; font-family: Inter, sans-serif; color: #555;">Generating...</div>`;
-            
-            let fullHtmlContent = '';
-            let buffer = '';
+            generateBtn.disabled = true;
 
-            fetch(API_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ prompt: prompt })
-            })
-            .then(response => {
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt: prompt })
+                });
+
                 if (!response.ok) {
-                    throw new Error(`Server error: ${response.status} ${response.statusText}`);
+                    const errorData = await response.json();
+                    throw new Error(`Server error: ${response.status} ${response.statusText} - ${errorData.error}`);
                 }
-                return response.json();
-            })
-            .then(data => {
-                if (data.candidates && data.candidates[0].content.parts[0].text) {
-                    const fullHtmlContent = data.candidates[0].content.parts[0].text;
-                    const cleanHtml = fullHtmlContent.replace(/^```html\s*|```\s*$/g, '').trim();
+
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                let fullHtmlContent = '';
+                let buffer = '';
+
+                while (true) {
+                    const { value, done } = await reader.read();
+                    if (done) {
+                        addAiMessage("Generation complete! Check out the preview and code.");
+                        break;
+                    }
+
+                    buffer += decoder.decode(value, { stream: true });
                     
-                    codeOutput.textContent = cleanHtml;
-                    previewOutput.srcdoc = cleanHtml;
-                    addAiMessage("Generation complete! Check out the preview and code.");
-                } else {
-                    throw new Error("Unexpected API response format.");
+                    // Gemini API 스트림은 JSON 객체들을 포함할 수 있음
+                    // 각 JSON 객체는 \r?\n으로 구분될 수 있음
+                    const parts = buffer.split(/\r?\n/);
+                    buffer = parts.pop(); // 마지막 불완전한 부분은 다음 처리를 위해 남겨둠
+
+                    for (const part of parts) {
+                        if (part.trim() === '' || part.trim() === '[' || part.trim() === ']') continue;
+                        
+                        let cleanedPart = part.trim();
+                        if (cleanedPart.startsWith(',')) {
+                            cleanedPart = cleanedPart.substring(1);
+                        }
+
+                        try {
+                            const json = JSON.parse(cleanedPart);
+                            if (json.candidates && json.candidates[0].content.parts[0].text) {
+                                const textChunk = json.candidates[0].content.parts[0].text;
+                                fullHtmlContent += textChunk;
+                                
+                                // ```html 태그 제거
+                                const cleanHtml = fullHtmlContent.replace(/^```html\s*|```\s*$/g, '').trim();
+
+                                codeOutput.textContent = cleanHtml;
+                                previewOutput.srcdoc = cleanHtml;
+                                // 스크롤을 아래로 이동시켜 실시간으로 보이는 효과
+                                const codeCanvas = document.getElementById('code-canvas');
+                                codeCanvas.scrollTop = codeCanvas.scrollHeight;
+                            }
+                        } catch (e) {
+                            console.warn("Could not parse JSON chunk:", cleanedPart, e);
+                        }
+                    }
                 }
-            })
-            .catch(error => {
+
+            } catch (error) {
                 const errorMessage = `Error generating code: ${error.message}`;
                 codeOutput.textContent = errorMessage;
                 previewOutput.srcdoc = `<div style="font-family: sans-serif; text-align: center; padding: 2rem; color: red;">${errorMessage}</div>`;
                 addAiMessage(`An error occurred: ${error.message}`);
-            });
+            } finally {
+                generateBtn.disabled = false;
+            }
         });
 
         // --- Initialize App ---
