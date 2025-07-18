@@ -1,1 +1,1 @@
-Fix: Reroute API calls through Vercel proxy
+Fix: Vercel static file serving for public directory
