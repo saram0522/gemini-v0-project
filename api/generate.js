@@ -59,15 +59,11 @@ module.exports = async (req, res) => {
         res.setHeader('Connection', 'keep-alive');
 
         // 응답 스트림을 클라이언트로 파이핑
-        const reader = response.body.getReader();
         const decoder = new TextDecoder();
         let buffer = '';
 
-        while (true) {
-            const { value, done } = await reader.read();
-            if (done) break;
-
-            buffer += decoder.decode(value, { stream: true });
+        for await (const chunk of response.body) {
+            buffer += decoder.decode(chunk, { stream: true });
 
             // 완전한 JSON 객체를 찾아서 처리
             let jsonStartIndex;
