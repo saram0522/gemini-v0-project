@@ -1,17 +1,21 @@
 {
-  "builds": [
-    {
-      "src": "public/**",
-      "use": "@vercel/static"
-    }
-  ],
   "functions": {
     "api/generate.js": {
+      "runtime": "@vercel/node",
       "maxDuration": 15
     }
   },
   "rewrites": [
-    { "source": "/api/generate", "destination": "/api/generate.js" },
-    { "source": "/(.*)", "destination": "/public/$1" }
-  ]
+    { "source": "/api/generate", "destination": "/api/generate.js" }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" }
+      ]
+    }
+  ],
+  "cleanUrls": true,
+  "trailingSlash": false
 }
