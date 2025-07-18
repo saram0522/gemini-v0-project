@@ -442,16 +442,19 @@
 
                     buffer += decoder.decode(value, { stream: true });
                     console.log('DEBUG: Buffer after decode:', buffer);
-                    const parts = buffer.split(/\r?\n/);
+                    const parts = buffer.split(/\n\n/); // SSE 메시지는 이중 줄바꿈으로 구분
                     buffer = parts.pop();
 
                     for (const part of parts) {
                         console.log('DEBUG: Processing part:', part);
-                        if (part.trim() === '' || part.trim() === '[' || part.trim() === ']') continue;
+                        if (part.trim() === '') continue;
                         
                         let cleanedPart = part.trim();
+                        if (cleanedPart.startsWith('data:')) {
+                            cleanedPart = cleanedPart.substring(5).trim(); // 'data:' 접두사 제거
+                        }
                         if (cleanedPart.startsWith(',')) {
-                            cleanedPart = cleanedPart.substring(1);
+                            cleanedPart = cleanedPart.substring(1).trim(); // 선행 쉼표 제거
                         }
                         console.log('DEBUG: Cleaned part before JSON.parse:', cleanedPart);
 
