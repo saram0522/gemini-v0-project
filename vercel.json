@@ -1,4 +1,10 @@
 {
+  "builds": [
+    {
+      "src": "public/**",
+      "use": "@vercel/static"
+    }
+  ],
   "functions": {
     "api/generate.js": {
       "maxDuration": 15
