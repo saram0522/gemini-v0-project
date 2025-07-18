@@ -430,52 +430,7 @@
                 let buffer = '';
 
                 while (true) {
-                    const { value, done } = await reader.read();
-                    console.log('DEBUG: Raw value from reader:', value);
-                    if (done) {
-                        const finalCleanHtml = fullHtmlContent.replace(/^```html\s*|```\s*$/g, '').trim();
-                        codeOutput.textContent = finalCleanHtml; // Bug Fix: Update code view on completion
-                        previewOutput.srcdoc = finalCleanHtml;
-                        addAiMessage("Generation complete! Check out the preview and code.");
-                        break;
-                    }
-
-                    buffer += decoder.decode(value, { stream: true });
-                    console.log('DEBUG: Buffer after decode:', buffer);
-                    const parts = buffer.split(/\n/); // 단일 줄바꿈으로 분리
-                    buffer = parts.pop();
-
-                    for (const part of parts) {
-                        console.log('DEBUG: Processing part:', part);
-                        if (part.trim() === '') continue;
-                        
-                        let cleanedPart = part.trim();
-                        // 'data:' 접두사 제거 로직 제거
-                        if (cleanedPart.startsWith(',')) {
-                            cleanedPart = cleanedPart.substring(1).trim(); // 선행 쉼표 제거
-                        }
-                        console.log('DEBUG: Cleaned part before JSON.parse:', cleanedPart);
-
-                        try {
-                            const json = JSON.parse(cleanedPart);
-                            console.log('DEBUG: Parsed JSON:', json);
-                            if (json.candidates && json.candidates[0].content.parts[0].text) {
-                                const textChunk = json.candidates[0].content.parts[0].text;
-                                console.log('DEBUG: Extracted textChunk:', textChunk);
-                                fullHtmlContent += textChunk;
-                                
-                                const cleanHtmlForCodeView = fullHtmlContent.replace(/^```html\s*|```\s*$/g, '').trim();
-                                codeOutput.textContent = cleanHtmlForCodeView;
-                                
-                                const codeCanvas = document.getElementById('code-canvas');
-                                codeCanvas.scrollTop = codeCanvas.scrollHeight;
-                            } else {
-                                console.warn("DEBUG: JSON structure not as expected:", json);
-                            }
-                        } catch (e) {
-                            console.warn("DEBUG: Could not parse JSON chunk:", cleanedPart, e);
-                        }
-                    }
+                    const { value, done } = await reader.read();                    if (done) {                        const finalCleanHtml = fullHtmlContent.replace(/^```html\s*|```\s*$/g, '').trim();                        codeOutput.textContent = finalCleanHtml; // Bug Fix: Update code view on completion                        previewOutput.srcdoc = finalCleanHtml;                        addAiMessage("컴포넌트 생성이 완료되었습니다! 미리보기와 코드를 확인해보세요.");                        break;                    }                    buffer += decoder.decode(value, { stream: true });                    const parts = buffer.split(/\n/); // 단일 줄바꿈으로 분리                    buffer = parts.pop();                    for (const part of parts) {                        if (part.trim() === '') continue;                                                let cleanedPart = part.trim();                        if (cleanedPart.startsWith(',')) {                            cleanedPart = cleanedPart.substring(1).trim(); // 선행 쉼표 제거                        }                        try {                            const json = JSON.parse(cleanedPart);                            if (json.candidates && json.candidates[0].content.parts[0].text) {                                const textChunk = json.candidates[0].content.parts[0].text;                                fullHtmlContent += textChunk;                                                                const cleanHtmlForCodeView = fullHtmlContent.replace(/^```html\s*|```\s*$/g, '').trim();                                codeOutput.textContent = cleanHtmlForCodeView;                                                                const codeCanvas = document.getElementById('code-canvas');                                codeCanvas.scrollTop = codeCanvas.scrollHeight;                            } else {                                // console.warn("JSON structure not as expected:", json);                            }                        } catch (e) {                            // console.warn("Could not parse JSON chunk:", cleanedPart, e);                        }                    }
                 }
 
             } catch (error) {
