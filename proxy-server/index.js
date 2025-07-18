@@ -17,7 +17,7 @@ app.post('/', async (req, res) => {
     const apiKey = process.env.GEMINI_API_KEY;
     console.log('DEBUG: API Key loaded:', apiKey ? 'Loaded' : 'Not Loaded');
     console.log('DEBUG: API Key first 5 chars:', apiKey ? apiKey.substring(0, 5) : 'N/A');
-    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`;
+    const apiUrl = `https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key=${apiKey}`;
     console.log('DEBUG: API URL:', apiUrl);
 
     if (!prompt) {
