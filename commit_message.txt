@@ -1,1 +1,5 @@
-Fix: Vercel static file serving for public directory
+Fix: Vercel routing and proxy server endpoint
+
+- Reverted public/index.html to use a relative path for /api/generate.
+- Modified proxy-server/index.js to listen on the root path (/) for Vercel rewrites.
+- Updated vercel.json to explicitly route /api/(.*) to /proxy-server/index.js.
