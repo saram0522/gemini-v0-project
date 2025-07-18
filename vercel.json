@@ -9,6 +9,10 @@
     {
       "source": "/api/(.*)",
       "destination": "/proxy-server"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/public/$1"
     }
   ]
 }
