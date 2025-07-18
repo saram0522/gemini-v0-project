@@ -440,7 +440,8 @@
                     }
 
                     buffer += decoder.decode(value, { stream: true });
-                    const parts = buffer.split(/\n/); // 단일 줄바꿈으로 분리
+                    const parts = buffer.split(/
+/); // 단일 줄바꿈으로 분리
                     buffer = parts.pop();
 
                     for (const part of parts) {
@@ -475,7 +476,7 @@
                 const errorMessage = `Error generating code: ${error.message}`;
                 codeOutput.textContent = errorMessage;
                 previewOutput.srcdoc = `<div style="font-family: sans-serif; text-align: center; padding: 2rem; color: red;">${errorMessage}</div>`;
-                addAiMessage(`죄송합니다. 컴포넌트 생성 중 오류가 발생했습니다: ${error.message}`);
+                addAiMessage(`죄송합니다. 컴포넌트 생성 중 오류가 발생했습니다: ${errorMessage}`);
             } finally {
                 generateBtn.disabled = false;
             }
