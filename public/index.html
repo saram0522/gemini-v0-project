@@ -391,7 +391,7 @@
             document.querySelector('.tab-btn[data-view="preview"]').classList.add('active');
             codeOutput.textContent = "Your generated code will appear here.";
             previewOutput.srcdoc = `<div style="display: flex; justify-content: center; align-items: center; height: 100%; font-family: Inter, sans-serif; color: #999;">Your component preview will appear here.</div>`;
-            addAiMessage("Hello! Describe the component you want me to build for you.");
+            addAiMessage("안녕하세요! 어떤 웹 컴포넌트를 만들어 드릴까요? 자세히 설명해주세요.");
         }
 
         // --- Gemini API Call Logic (Streaming) ---
@@ -407,7 +407,7 @@
 
             const API_URL = '/api/generate';
 
-            addAiMessage("네, 알겠습니다! 요청하신 컴포넌트를 실시간으로 생성하고 있습니다. 잠시만 기다려주세요...");
+            addAiMessage("알겠습니다! 지금 바로 요청하신 컴포넌트 코드를 작성하고 있습니다. 실시간으로 확인하실 수 있습니다.");
             codeOutput.textContent = '';
             previewOutput.srcdoc = `<div style="display: flex; justify-content: center; align-items: center; height: 100%; font-family: Inter, sans-serif; color: #555;">Generating...</div>`;
             generateBtn.disabled = true;
@@ -430,7 +430,7 @@
                 let buffer = '';
 
                 while (true) {
-                    const { value, done } = await reader.read();                    if (done) {                        const finalCleanHtml = fullHtmlContent.replace(/^```html\s*|```\s*$/g, '').trim();                        codeOutput.textContent = finalCleanHtml; // Bug Fix: Update code view on completion                        previewOutput.srcdoc = finalCleanHtml;                        addAiMessage("컴포넌트 생성이 완료되었습니다! 미리보기와 코드를 확인해보세요.");                        break;                    }                    buffer += decoder.decode(value, { stream: true });                    const parts = buffer.split(/\n/); // 단일 줄바꿈으로 분리                    buffer = parts.pop();                    for (const part of parts) {                        if (part.trim() === '') continue;                                                let cleanedPart = part.trim();                        if (cleanedPart.startsWith(',')) {                            cleanedPart = cleanedPart.substring(1).trim(); // 선행 쉼표 제거                        }                        try {                            const json = JSON.parse(cleanedPart);                            if (json.candidates && json.candidates[0].content.parts[0].text) {                                const textChunk = json.candidates[0].content.parts[0].text;                                fullHtmlContent += textChunk;                                                                const cleanHtmlForCodeView = fullHtmlContent.replace(/^```html\s*|```\s*$/g, '').trim();                                codeOutput.textContent = cleanHtmlForCodeView;                                                                const codeCanvas = document.getElementById('code-canvas');                                codeCanvas.scrollTop = codeCanvas.scrollHeight;                            } else {                                // console.warn("JSON structure not as expected:", json);                            }                        } catch (e) {
+                    const { value, done } = await reader.read();                    if (done) {                        const finalCleanHtml = fullHtmlContent.replace(/^```html\s*|```\s*$/g, '').trim();                        codeOutput.textContent = finalCleanHtml; // Bug Fix: Update code view on completion                        previewOutput.srcdoc = finalCleanHtml;                        addAiMessage("컴포넌트 코드 작성이 완료되었습니다! 'Code' 탭에서 전체 코드를 확인하시고, 'Preview' 탭에서 결과를 바로 확인하실 수 있습니다.");                        break;                    }                    buffer += decoder.decode(value, { stream: true });                    const parts = buffer.split(/\n/); // 단일 줄바꿈으로 분리                    buffer = parts.pop();                    for (const part of parts) {                        if (part.trim() === '') continue;                                                let cleanedPart = part.trim();                        if (cleanedPart.startsWith(',')) {                            cleanedPart = cleanedPart.substring(1).trim(); // 선행 쉼표 제거                        }                        try {                            const json = JSON.parse(cleanedPart);                            if (json.candidates && json.candidates[0].content.parts[0].text) {                                const textChunk = json.candidates[0].content.parts[0].text;                                fullHtmlContent += textChunk;                                                                const cleanHtmlForCodeView = fullHtmlContent.replace(/^```html\s*|```\s*$/g, '').trim();                                codeOutput.textContent = cleanHtmlForCodeView;                                                                const codeCanvas = document.getElementById('code-canvas');                                codeCanvas.scrollTop = codeCanvas.scrollHeight;                            } else {                                // console.warn("JSON structure not as expected:", json);                            }                        } catch (e) {
                             console.warn("Could not parse JSON chunk:", cleanedPart, e);
                         }
                     }
@@ -440,7 +440,7 @@
                 const errorMessage = `Error generating code: ${error.message}`;
                 codeOutput.textContent = errorMessage;
                 previewOutput.srcdoc = `<div style="font-family: sans-serif; text-align: center; padding: 2rem; color: red;">${errorMessage}</div>`;
-                addAiMessage(`An error occurred: ${error.message}`);
+                addAiMessage(`죄송합니다. 컴포넌트 생성 중 오류가 발생했습니다: ${error.message}`);
             } finally {
                 generateBtn.disabled = false;
             }
