@@ -1,3 +1,4 @@
+console.log('DEBUG: proxy-server/index.js is starting up.');
 require('dotenv').config();
 const express = require('express');
 const fetch = require('node-fetch');
