@@ -11,8 +11,8 @@
   ],
   "rewrites": [
     {
-      "source": "/api/(.*)",
-      "destination": "/proxy-server"
+      "source": "/api/generate",
+      "destination": "/proxy-server/index.js"
     },
     {
       "source": "/(.*)",
