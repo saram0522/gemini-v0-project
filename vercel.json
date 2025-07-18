@@ -1,4 +1,9 @@
 {
+  "functions": {
+    "api/generate.js": {
+      "maxDuration": 15
+    }
+  },
   "rewrites": [
     { "source": "/api/generate", "destination": "/api/generate.js" },
     { "source": "/(.*)", "destination": "/public/$1" }
