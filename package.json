@@ -2,9 +2,8 @@
   "name": "gemini-proxy-server",
   "version": "1.0.0",
   "description": "A proxy server for the Gemini API.",
-  "main": "server.js",
+  "main": "proxy-server/index.js",
   "scripts": {
-    "start": "node server.js"
   },
   "dependencies": {
     "express": "^4.19.2",
