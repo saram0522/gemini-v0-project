@@ -77,15 +77,39 @@
             padding: 1.5rem;
         }
 
-        .input-panel h2 {
-            margin-top: 0;
-            font-weight: 700;
+        .input-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             padding-bottom: 1rem;
             margin-bottom: 1rem;
             border-bottom: 1px solid;
         }
-        body[data-theme='dark'] .input-panel h2 { border-color: var(--glass-border-dark); }
-        body[data-theme='light'] .input-panel h2 { border-color: var(--glass-border-light); }
+        body[data-theme='dark'] .input-header { border-color: var(--glass-border-dark); }
+        body[data-theme='light'] .input-header { border-color: var(--glass-border-light); }
+
+        .input-header h2 {
+            margin-top: 0;
+            font-weight: 700;
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        #speech-toggle-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            opacity: 0.3;
+            transition: opacity 0.2s ease;
+        }
+        #speech-toggle-btn.enabled {
+            opacity: 0.8;
+        }
+        #speech-toggle-btn:hover {
+            opacity: 1;
+        }
 
         #ai-chat-log {
             flex-grow: 1;
@@ -244,7 +268,10 @@
 <body data-theme="dark">
     <div class="container">
         <div class="panel input-panel">
-            <h2>AI Assistant</h2>
+            <div class="input-header">
+                <h2>AI Assistant</h2>
+                <button id="speech-toggle-btn">🔊</button>
+            </div>
             <div id="ai-chat-log"></div>
             <div class="prompt-area">
                 <textarea id="prompt-input" placeholder="e.g., A modern login form with email and password fields..."></textarea>
@@ -278,6 +305,27 @@
         const codeOutput = document.getElementById('code-output');
         const aiChatLog = document.getElementById('ai-chat-log');
         const themeToggle = document.getElementById('theme-toggle');
+        const speechToggleBtn = document.getElementById('speech-toggle-btn');
+
+        // --- State ---
+        let isSpeechEnabled = false;
+
+        // --- Speech Synthesis ---
+        function speak(text) {
+            if (!isSpeechEnabled || !window.speechSynthesis) return;
+            window.speechSynthesis.cancel();
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'ko-KR';
+            window.speechSynthesis.speak(utterance);
+        }
+
+        speechToggleBtn.addEventListener('click', () => {
+            isSpeechEnabled = !isSpeechEnabled;
+            speechToggleBtn.classList.toggle('enabled', isSpeechEnabled);
+            if (isSpeechEnabled) {
+                speak("AI 음성 활성화");
+            }
+        });
 
         // --- Theme Switching Logic ---
         function setInitialTheme() {
@@ -312,7 +360,8 @@
             msgElement.className = 'ai-message';
             msgElement.textContent = message;
             aiChatLog.appendChild(msgElement);
-            aiChatLog.scrollTop = aiChatLog.scrollHeight; // Auto-scroll to bottom
+            aiChatLog.scrollTop = aiChatLog.scrollHeight;
+            speak(message);
         }
 
         function setInitialView() {
@@ -337,6 +386,7 @@
             codeOutput.textContent = '';
             previewOutput.srcdoc = `<div style="display: flex; justify-content: center; align-items: center; height: 100%; font-family: Inter, sans-serif; color: #555;">Generating...</div>`;
             generateBtn.disabled = true;
+            let fullHtmlContent = '';
 
             try {
                 const response = await fetch(API_URL, {
@@ -352,22 +402,20 @@
 
                 const reader = response.body.getReader();
                 const decoder = new TextDecoder();
-                let fullHtmlContent = '';
                 let buffer = '';
 
                 while (true) {
                     const { value, done } = await reader.read();
                     if (done) {
+                        const finalCleanHtml = fullHtmlContent.replace(/^```html\s*|```\s*$/g, '').trim();
+                        previewOutput.srcdoc = finalCleanHtml;
                         addAiMessage("Generation complete! Check out the preview and code.");
                         break;
                     }
 
                     buffer += decoder.decode(value, { stream: true });
-                    
-                    // Gemini API 스트림은 JSON 객체들을 포함할 수 있음
-                    // 각 JSON 객체는 \r?\n으로 구분될 수 있음
-                    const parts = buffer.split(/\r?\n/);
-                    buffer = parts.pop(); // 마지막 불완전한 부분은 다음 처리를 위해 남겨둠
+                    const parts = buffer.split(/\\r?\\n/);
+                    buffer = parts.pop();
 
                     for (const part of parts) {
                         if (part.trim() === '' || part.trim() === '[' || part.trim() === ']') continue;
@@ -383,12 +431,9 @@
                                 const textChunk = json.candidates[0].content.parts[0].text;
                                 fullHtmlContent += textChunk;
                                 
-                                // ```html 태그 제거
-                                const cleanHtml = fullHtmlContent.replace(/^```html\s*|```\s*$/g, '').trim();
-
-                                codeOutput.textContent = cleanHtml;
-                                previewOutput.srcdoc = cleanHtml;
-                                // 스크롤을 아래로 이동시켜 실시간으로 보이는 효과
+                                const cleanHtmlForCodeView = fullHtmlContent.replace(/^```html\s*|```\s*$/g, '').trim();
+                                codeOutput.textContent = cleanHtmlForCodeView;
+                                
                                 const codeCanvas = document.getElementById('code-canvas');
                                 codeCanvas.scrollTop = codeCanvas.scrollHeight;
                             }
