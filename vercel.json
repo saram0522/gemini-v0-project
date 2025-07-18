@@ -12,7 +12,7 @@
   "rewrites": [
     {
       "source": "/api/generate",
-      "destination": "/proxy-server/index.js"
+      "destination": "/api/proxy-server"
     },
     {
       "source": "/(.*)",
