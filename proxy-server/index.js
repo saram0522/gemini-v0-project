@@ -14,6 +14,7 @@ app.use(express.json());
 // 프록시 요청을 처리할 엔드포인트입니다.
 // Netlify 함수가 이 주소로 요청을 보낼 것입니다. (예: https://your-proxy.vercel.app/api/generate)
 app.post('/', async (req, res) => {
+    console.log('DEBUG: Request received at /');
     const { prompt } = req.body;
     const apiKey = process.env.GEMINI_API_KEY;
     console.log('DEBUG: API Key loaded:', apiKey ? 'Loaded' : 'Not Loaded');
