@@ -22,13 +22,31 @@ module.exports = async (req, res) => {
         return res.status(400).json({ error: 'Prompt and API key are required' });
     }
 
+    let isCodeGenerationRequest = false;
+    const codeKeywords = ["create", "generate", "html", "component", "design", "form", "button", "layout", "page", "section", "card", "modal", "navbar", "footer", "header", "table", "list", "gallery", "grid", "flexbox", "responsive", "style", "css", "javascript", "js", "interactive", "animation", "effect", "element", "structure", "build", "make", "develop", "implement", "code", "markup", "frontend", "ui", "ux"];
+    const lowerCasePrompt = prompt.toLowerCase();
+
+    for (const keyword of codeKeywords) {
+        if (lowerCasePrompt.includes(keyword)) {
+            isCodeGenerationRequest = true;
+            break;
+        }
+    }
+
+    let geminiPromptText;
+    if (isCodeGenerationRequest) {
+        geminiPromptText = `Create a single, self-contained HTML file with modern, responsive, and clean design using inline CSS and JavaScript for the following component. Do not use any external libraries or frameworks. The entire output must be a single block of valid HTML code, starting with <!DOCTYPE html>. Component description: ${prompt}`;
+    } else {
+        geminiPromptText = prompt; // For general conversation, just pass the prompt as is.
+    }
+
     // 스트리밍을 위해 :streamGenerateContent 엔드포인트 사용
     const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:streamGenerateContent?key=${apiKey}`;
 
     const requestBody = {
         "contents": [{
             "parts": [{
-                "text": `Create a single, self-contained HTML file with modern, responsive, and clean design using inline CSS and JavaScript for the following component. The design should be aesthetically pleasing. Do not use any external libraries or frameworks. The entire output must be a single block of valid HTML code, starting with <!DOCTYPE html>. Component description: ${prompt}`
+                "text": geminiPromptText
             }]
         }],
         "generationConfig": { "temperature": 0.4, "topK": 1, "topP": 1, "maxOutputTokens": 8192 },
@@ -59,46 +77,7 @@ module.exports = async (req, res) => {
         res.setHeader('Connection', 'keep-alive');
 
         // 응답 스트림을 클라이언트로 파이핑
-        const decoder = new TextDecoder();
-        let buffer = '';
-
-        for await (const chunk of response.body) {
-            buffer += decoder.decode(chunk, { stream: true });
-
-            // 완전한 JSON 객체를 찾아서 처리
-            let jsonStartIndex;
-            while ((jsonStartIndex = buffer.indexOf('{')) !== -1) {
-                let jsonEndIndex = -1;
-                let openBraceCount = 0;
-                for (let i = jsonStartIndex; i < buffer.length; i++) {
-                    if (buffer[i] === '{') {
-                        openBraceCount++;
-                    } else if (buffer[i] === '}') {
-                        openBraceCount--;
-                    }
-                    if (openBraceCount === 0 && buffer[i] === '}') {
-                        jsonEndIndex = i;
-                        break;
-                    }
-                }
-
-                if (jsonEndIndex !== -1) {
-                    const jsonString = buffer.substring(jsonStartIndex, jsonEndIndex + 1);
-                    try {
-                        const json = JSON.parse(jsonString);
-                        res.write(JSON.stringify(json) + '\n'); // 각 JSON 객체를 줄바꿈으로 구분하여 전송
-                        buffer = buffer.substring(jsonEndIndex + 1).trim();
-                    } catch (e) {
-                        // 불완전한 JSON이거나 파싱 오류, 다음 청크를 기다림
-                        break;
-                    }
-                } else {
-                    // 완전한 JSON 객체를 찾지 못함, 다음 청크를 기다림
-                    break;
-                }
-            }
-        }
-        res.end();
+        const decoder = new TextDecoder();        let buffer = '';        for await (const chunk of response.body) {            buffer += decoder.decode(chunk, { stream: true });            // 완전한 JSON 객체를 찾아서 처리            let jsonStartIndex;            while ((jsonStartIndex = buffer.indexOf('{')) !== -1) {                let jsonEndIndex = -1;                let openBraceCount = 0;                for (let i = jsonStartIndex; i < buffer.length; i++) {                    if (buffer[i] === '{') {                        openBraceCount++;                    } else if (buffer[i] === '}') {                        openBraceCount--;                    }                    if (openBraceCount === 0 && buffer[i] === '}') {                        jsonEndIndex = i;                        break;                    }                }                if (jsonEndIndex !== -1) {                    const jsonString = buffer.substring(jsonStartIndex, jsonEndIndex + 1);                    try {                        const json = JSON.parse(jsonString);                        res.write(JSON.stringify(json) + '\n'); // 각 JSON 객체를 줄바꿈으로 구분하여 전송                        buffer = buffer.substring(jsonEndIndex + 1).trim();                    } catch (e) {                        // 불완전한 JSON이거나 파싱 오류, 다음 청크를 기다림                        break;                    }                } else {                    // 완전한 JSON 객체를 찾지 못함, 다음 청크를 기다림                    break;                }            }        }        res.end();
 
     } catch (error) {
         console.error('Serverless Function Error:', error);

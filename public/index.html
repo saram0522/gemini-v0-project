@@ -49,6 +49,7 @@
             height: 100vh;
             padding: 2rem;
             box-sizing: border-box;
+            transition: all 0.3s ease; /* Add transition for smooth layout changes */
         }
 
         .panel {
@@ -72,212 +73,33 @@
         }
 
         .input-panel {
-            width: 30%;
+            width: 30%; /* Initial width */
             margin-right: 2rem;
             padding: 1.5rem;
+            transition: width 0.3s ease, margin-right 0.3s ease; /* Add transition */
         }
-
-        .input-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding-bottom: 1rem;
-            margin-bottom: 1rem;
-            border-bottom: 1px solid;
-        }
-        body[data-theme='dark'] .input-header { border-color: var(--glass-border-dark); }
-        body[data-theme='light'] .input-header { border-color: var(--glass-border-light); }
-
-        .input-header h2 {
-            margin-top: 0;
-            font-weight: 700;
-            border-bottom: none;
-            margin-bottom: 0;
-            padding-bottom: 0;
-        }
-
-        #speech-toggle-btn {
-            background: none;
-            border: none;
-            font-size: 1.5rem;
-            cursor: pointer;
-            opacity: 0.3;
-            transition: opacity 0.2s ease;
-        }
-        #speech-toggle-btn.enabled {
-            opacity: 0.8;
-        }
-        #speech-toggle-btn:hover {
-            opacity: 1;
-        }
-
-        #ai-chat-log {
-            flex-grow: 1;
-            overflow-y: auto;
-            padding-right: 10px;
-            margin-bottom: 1rem;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .ai-message {
-            padding: 0.75rem 1rem;
-            border-radius: 10px;
-            margin-bottom: 0.75rem;
-            max-width: 90%;
-            line-height: 1.5;
-            align-self: flex-start;
-        }
-
-        .user-message {
-            padding: 0.75rem 1rem;
-            border-radius: 10px;
-            margin-bottom: 0.75rem;
-            max-width: 90%;
-            line-height: 1.5;
-            align-self: flex-end;
-            background-color: var(--primary-color);
-            color: white;
-        }
-
-        body[data-theme='dark'] .ai-message {
-            background: rgba(0,0,0,0.2);
-        }
-        body[data-theme='light'] .ai-message {
-            background: rgba(255,255,255,0.6);
-            color: #374151;
-        }
-
-        .prompt-area {
-            margin-top: auto;
-        }
-
-        textarea#prompt-input {
-            width: 100%;
-            height: 80px;
-            resize: none;
-            border-radius: 8px;
-            padding: 1rem;
-            font-family: "SF Mono", "Fira Code", monospace;
-            font-size: 1rem;
-            box-sizing: border-box;
-            transition: background 0.3s ease, border 0.3s ease, color 0.3s ease;
-        }
-
-        body[data-theme='dark'] textarea#prompt-input {
-            background-color: var(--input-bg-dark);
-            color: var(--text-color-dark);
-            border: 1px solid var(--glass-border-dark);
-        }
-        body[data-theme='light'] textarea#prompt-input {
-            background-color: var(--input-bg-light);
-            color: var(--text-color-light);
-            border: 1px solid var(--glass-border-light);
-        }
-
-        textarea#prompt-input:focus {
-            outline: none;
-            border-color: var(--primary-color);
-            box-shadow: 0 0 0 2px var(--primary-color-hover);
-        }
-
-        button#generate-btn {
-            width: 100%;
-            margin-top: 1rem;
-            padding: 0.85rem 1.5rem;
-            background-color: var(--primary-color);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 1rem;
-            font-weight: 500;
-            transition: background-color 0.2s ease, transform 0.1s ease;
-        }
-        button#generate-btn:hover { background-color: var(--primary-color-hover); }
-        button#generate-btn:active { transform: scale(0.98); }
 
         .output-panel {
-            width: 70%;
+            width: 70%; /* Initial width */
             padding: 0;
+            display: flex; /* Change to flex to control visibility */
+            flex-direction: column;
+            transition: width 0.3s ease, opacity 0.3s ease, transform 0.3s ease; /* Add transition */
         }
-        
-        .output-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0.75rem 1.5rem;
-            border-bottom: 1px solid;
+
+        /* New CSS for hidden output panel */
+        .output-panel.hidden {
+            width: 0;
+            opacity: 0;
+            transform: translateX(100%); /* Move out of view */
+            margin-left: -2rem; /* Compensate for margin-right of input-panel */
+            pointer-events: none; /* Disable interactions */
         }
-        body[data-theme='dark'] .output-header { border-color: var(--glass-border-dark); }
-        body[data-theme='light'] .output-header { border-color: var(--glass-border-light); }
 
-        .tab-btn {
-            background: none;
-            border: none;
-            padding: 0.5rem 1rem;
-            cursor: pointer;
-            font-size: 1rem;
-            font-weight: 500;
-            transition: opacity 0.2s ease, color 0.2s ease;
-            border-bottom: 2px solid transparent;
+        .input-panel.expanded {
+            width: 100%; /* Take full width when output panel is hidden */
+            margin-right: 0;
         }
-        body[data-theme='dark'] .tab-btn { color: var(--text-color-dark); opacity: 0.6; }
-        body[data-theme='light'] .tab-btn { color: var(--text-color-light); opacity: 0.6; }
-        .tab-btn.active {
-            opacity: 1;
-            border-bottom: 2px solid var(--primary-color);
-        }
-        body[data-theme='dark'] .tab-btn.active { color: white; }
-        body[data-theme='light'] .tab-btn.active { color: #000; }
-
-        #theme-toggle {
-            background: none;
-            border: 1px solid;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            font-size: 1.5rem;
-            cursor: pointer;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            transition: background 0.2s ease, border-color 0.3s ease;
-        }
-        body[data-theme='dark'] #theme-toggle { border-color: var(--glass-border-dark); color: #fff; }
-        body[data-theme='light'] #theme-toggle { border-color: var(--glass-border-light); color: #000; }
-        body[data-theme='dark'] #theme-toggle:hover { background: rgba(255,255,255,0.1); }
-        body[data-theme='light'] #theme-toggle:hover { background: rgba(0,0,0,0.1); }
-
-        .view-content { flex-grow: 1; overflow: hidden; padding: 1.5rem; box-sizing: border-box; }
-        .content-panel { width: 100%; height: 100%; display: none; }
-        .content-panel.active { display: block; }
-
-        iframe#preview-output { width: 100%; height: 100%; border: none; border-radius: 8px; background-color: #fff; }
-
-        pre#code-canvas {
-            height: 100%;
-            box-sizing: border-box;
-            overflow: auto;
-            margin: 0;
-            border-radius: 8px;
-            padding: 1rem;
-            transition: background 0.3s ease, border 0.3s ease;
-        }
-        body[data-theme='dark'] pre#code-canvas { background-color: rgba(0,0,0,0.3); border: 1px solid var(--glass-border-dark); }
-        body[data-theme='light'] pre#code-canvas { background-color: rgba(255,255,255,0.4); border: 1px solid var(--glass-border-light); }
-
-        code#code-output {
-            font-family: "SF Mono", "Fira Code", monospace;
-            font-size: 0.9rem;
-            white-space: pre-wrap;
-            word-wrap: break-word;
-            transition: color 0.3s ease;
-        }
-        body[data-theme='dark'] code#code-output { color: #c8d6f5; }
-        body[data-theme='light'] code#code-output { color: #1e293b; }
-
-    </style>
 </head>
 <body data-theme="dark">
     <div class="container">
@@ -392,6 +214,10 @@
             codeOutput.textContent = "Your generated code will appear here.";
             previewOutput.srcdoc = `<div style="display: flex; justify-content: center; align-items: center; height: 100%; font-family: Inter, sans-serif; color: #999;">Your component preview will appear here.</div>`;
             addAiMessage("안녕하세요! 어떤 웹 컴포넌트를 만들어 드릴까요? 자세히 설명해주세요.");
+
+            // Initially hide the output panel and expand the input panel
+            document.querySelector('.output-panel').classList.add('hidden');
+            document.querySelector('.input-panel').classList.add('expanded');
         }
 
         // --- Gemini API Call Logic (Streaming) ---
@@ -405,13 +231,19 @@
             addUserMessage(prompt);
             promptInput.value = '';
 
+            // Show output panel and shrink input panel when generating
+            document.querySelector('.output-panel').classList.remove('hidden');
+            document.querySelector('.input-panel').classList.remove('expanded');
+
             const API_URL = '/api/generate';
 
             addAiMessage("알겠습니다! 지금 바로 요청하신 컴포넌트 코드를 작성하고 있습니다. 실시간으로 확인하실 수 있습니다.");
             codeOutput.textContent = '';
             previewOutput.srcdoc = `<div style="display: flex; justify-content: center; align-items: center; height: 100%; font-family: Inter, sans-serif; color: #555;">Generating...</div>`;
             generateBtn.disabled = true;
-            let fullHtmlContent = '';
+
+            let fullHtmlContent = ''; // Declare fullHtmlContent here
+            let isHtmlResponse = false; // Declare isHtmlResponse here
 
             try {
                 const response = await fetch(API_URL, {
@@ -425,59 +257,103 @@
                     throw new Error(`Server error: ${response.status} ${response.statusText} - ${errorData.error}`);
                 }
 
-                const reader = response.body.getReader();
-                const decoder = new TextDecoder();
-                let buffer = '';
+                // Use TextDecoderStream for robust text decoding
+                const reader = response.body.pipeThrough(new TextDecoderStream()).getReader();
+                let accumulatedText = '';
 
                 while (true) {
                     const { value, done } = await reader.read();
                     if (done) {
-                        const finalCleanHtml = fullHtmlContent.replace(/^```html\s*|```\s*$/g, '').trim();
-                        codeOutput.textContent = finalCleanHtml; // Bug Fix: Update code view on completion
-                        previewOutput.srcdoc = finalCleanHtml;
-                        addAiMessage("컴포넌트 코드 작성이 완료되었습니다! 'Code' 탭에서 전체 코드를 확인하시고, 'Preview' 탭에서 결과를 바로 확인하실 수 있습니다.");
+                        // Process any remaining accumulated text
+                        if (accumulatedText.trim() !== '') {
+                            try {
+                                const json = JSON.parse(accumulatedText);
+                                if (json.candidates && json.candidates[0].content.parts[0].text) {
+                                    const textChunk = json.candidates[0].content.parts[0].text;
+                                    if (textChunk.startsWith('<!DOCTYPE html>') || isHtmlResponse) {
+                                        isHtmlResponse = true;
+                                        fullHtmlContent += textChunk;
+                                    } else {
+                                        addAiMessage(textChunk);
+                                    }
+                                }
+                            } catch (e) {
+                                console.warn("Could not parse final JSON chunk:", accumulatedText, e);
+                            }
+                        }
+
+                        // After the loop, if it was an HTML response, update preview and final message
+                        if (isHtmlResponse) {
+                            const finalCleanHtml = fullHtmlContent.replace(/^```html\s*|```\s*$/g, '').trim();
+                            codeOutput.textContent = finalCleanHtml;
+                            previewOutput.srcdoc = finalCleanHtml;
+                            addAiMessage("컴포넌트 코드 작성이 완료되었습니다! 'Code' 탭에서 전체 코드를 확인하시고, 'Preview' 탭에서 결과를 바로 확인하실 수 있습니다.");
+                        } else {
+                            // If it was a general conversation, ensure output panel is hidden
+                            document.querySelector('.output-panel').classList.add('hidden');
+                            document.querySelector('.input-panel').classList.add('expanded');
+                        }
                         break;
                     }
 
-                    buffer += decoder.decode(value, { stream: true });
-                    const parts = buffer.split(/\n/); // 단일 줄바꿈으로 분리
-                    buffer = parts.pop();
+                    accumulatedText += value;
+                    const lines = accumulatedText.split('\n');
+                    accumulatedText = lines.pop(); // Keep the last (potentially incomplete) line
 
-                    for (const part of parts) {
-                        if (part.trim() === '') continue;
-                        
-                        let cleanedPart = part.trim();
-                        if (cleanedPart.startsWith(',')) {
-                            cleanedPart = cleanedPart.substring(1).trim(); // 선행 쉼표 제거
-                        }
-
+                    for (const line of lines) {
+                        if (line.trim() === '') continue;
                         try {
-                            const json = JSON.parse(cleanedPart);
+                            const json = JSON.parse(line);
                             if (json.candidates && json.candidates[0].content.parts[0].text) {
                                 const textChunk = json.candidates[0].content.parts[0].text;
-                                fullHtmlContent += textChunk;
-                                
-                                const cleanHtmlForCodeView = fullHtmlContent.replace(/^```html\s*|```\s*$/g, '').trim();
-                                codeOutput.textContent = cleanHtmlForCodeView;
-                                
-                                const codeCanvas = document.getElementById('code-canvas');
-                                codeCanvas.scrollTop = codeCanvas.scrollHeight;
-                            } else {
-                                // console.warn("JSON structure not as expected:", json);
+
+                                if (textChunk.startsWith('<!DOCTYPE html>') || isHtmlResponse) {
+                                    isHtmlResponse = true;
+                                    fullHtmlContent += textChunk;
+
+                                    const cleanHtmlForCodeView = fullHtmlContent.replace(/^```html\s*|```\s*$/g, '').trim();
+                                    codeOutput.textContent = cleanHtmlForCodeView;
+
+                                    const codeCanvas = document.getElementById('code-canvas');
+                                    codeCanvas.scrollTop = codeCanvas.scrollHeight;
+                                } else {
+                                    // General conversation response
+                                    addAiMessage(textChunk);
+                                    // Hide output panel for general conversation
+                                    document.querySelector('.output-panel').classList.add('hidden');
+                                    document.querySelector('.input-panel').classList.add('expanded');
+                                }
                             }
                         } catch (e) {
-                            console.warn("Could not parse JSON chunk:", cleanedPart, e);
+                            console.warn("Could not parse JSON line:", line, e);
                         }
                     }
                 }
 
             } catch (error) {
-                const errorMessage = `Error generating code: ${error.message}`;
-                codeOutput.textContent = errorMessage;
-                previewOutput.srcdoc = `<div style="font-family: sans-serif; text-align: center; padding: 2rem; color: red;">${errorMessage}</div>`;
-                addAiMessage(`죄송합니다. 컴포넌트 생성 중 오류가 발생했습니다: ${errorMessage}`);
+                let userFacingMessage = "죄송합니다. 컴포넌트 생성 중 알 수 없는 오류가 발생했습니다.";
+                let displayMessage = `Error generating code: ${error.message}`;
+
+                if (error.message.includes("400") && error.message.includes("API key are required")) {
+                    userFacingMessage = "API 키가 설정되지 않았거나 유효하지 않습니다. Vercel 환경 변수를 확인해주세요.";
+                    displayMessage = "API Key Error: Please check your Vercel environment variables for GEMINI_API_KEY.";
+                } else if (error.message.includes("Server error")) {
+                    userFacingMessage = `서버 오류가 발생했습니다: ${error.message.split('-')[1]?.trim() || error.message}`;
+                    displayMessage = `Server Error: ${error.message}`;
+                } else if (error.message.includes("network")) {
+                    userFacingMessage = "네트워크 연결에 문제가 있습니다. 인터넷 연결을 확인해주세요.";
+                    displayMessage = `Network Error: ${error.message}`;
+                }
+
+                codeOutput.textContent = displayMessage;
+                previewOutput.srcdoc = `<div style="font-family: sans-serif; text-align: center; padding: 2rem; color: red;">${userFacingMessage}</div>`;
+                addAiMessage(userFacingMessage);
             } finally {
                 generateBtn.disabled = false;
+                // After generation, keep the output panel visible.
+                // If you want to hide it again, uncomment the lines below:
+                document.querySelector('.output-panel').classList.add('hidden');
+                document.querySelector('.input-panel').classList.add('expanded');
             }
         });
 
