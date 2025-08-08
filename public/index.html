@@ -5,101 +5,376 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gemini Web Designer</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap');
 
-        :root {
-            --text-color-dark: #e0e0e0;
-            --background-dark: linear-gradient(135deg, #101828, #26042c);
-            --glass-bg-dark: rgba(255, 255, 255, 0.05);
-            --glass-border-dark: rgba(255, 255, 255, 0.1);
-            --input-bg-dark: rgba(0,0,0,0.2);
-            --panel-bg-dark: transparent;
+    :root {
+        /* Dark Theme */
+        --text-color-dark: #e0e0e0;
+        --background-dark: linear-gradient(135deg, #1a1a2e, #16213e, #0f3460); /* Deeper, more modern dark gradient */
+        --glass-bg-dark: rgba(255, 255, 255, 0.08); /* Slightly more opaque glass */
+        --glass-border-dark: rgba(255, 255, 255, 0.15); /* Stronger glass border */
+        --input-bg-dark: rgba(0,0,0,0.3);
+        --panel-bg-dark: transparent; /* Keep transparent for glass effect */
 
-            --text-color-light: #1f2937;
-            --background-light: linear-gradient(135deg, #f0f9ff, #f3e8ff);
-            --glass-bg-light: rgba(255, 255, 255, 0.4);
-            --glass-border-light: rgba(0, 0, 0, 0.1);
-            --input-bg-light: rgba(255,255,255,0.5);
-            --panel-bg-light: rgba(255, 255, 255, 0.2);
+        /* Light Theme */
+        --text-color-light: #333;
+        --background-light: linear-gradient(135deg, #f0f2f5, #e0e5ec); /* Soft, clean light gradient */
+        --glass-bg-light: rgba(255, 255, 255, 0.6); /* More opaque glass for light theme */
+        --glass-border-light: rgba(0, 0, 0, 0.1);
+        --input-bg-light: rgba(255,255,255,0.8);
+        --panel-bg-light: rgba(255, 255, 255, 0.4);
 
-            --primary-color: #6a5acd; /* SlateBlue */
-            --primary-color-hover: #5a4acd;
-        }
+        /* Primary Color - A more vibrant, modern blue/purple */
+        --primary-color: #7b68ee; /* MediumSlateBlue - more vibrant */
+        --primary-color-hover: #6a5acd; /* Darker shade for hover */
+        --secondary-color: #00bcd4; /* Cyan for accents */
+    }
 
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            transition: background 0.3s ease, color 0.3s ease;
-        }
+    html, body {
+        height: 100%; /* Ensure html and body take full height */
+        width: 100%;
+    }
 
-        body[data-theme='dark'] {
-            background: var(--background-dark);
-            color: var(--text-color-dark);
-        }
+    body {
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        transition: background 0.3s ease, color 0.3s ease;
+        font-size: 16px; /* Base font size */
+        line-height: 1.6;
+    }
 
-        body[data-theme='light'] {
-            background: var(--background-light);
-            color: var(--text-color-light);
-        }
+    body[data-theme='dark'] {
+        background: var(--background-dark);
+        color: var(--text-color-dark);
+    }
 
+    body[data-theme='light'] {
+        background: var(--background-light);
+        color: var(--text-color-light);
+    }
+
+    .container {
+        display: flex;
+        width: 100%;
+        height: 100vh;
+        padding: 2rem;
+        box-sizing: border-box;
+        transition: all 0.3s ease;
+        gap: 2rem; /* Use gap for spacing instead of margin-right */
+    }
+
+    .panel {
+        border-radius: 20px; /* Slightly larger border-radius */
+        backdrop-filter: blur(25px); /* Stronger blur */
+        -webkit-backdrop-filter: blur(25px);
+        box-shadow: 0 10px 40px 0 rgba(0, 0, 0, 0.4); /* Softer, larger shadow */
+        display: flex;
+        flex-direction: column;
+        transition: background 0.3s ease, border 0.3s ease, box-shadow 0.3s ease;
+        overflow: hidden; /* Ensure content respects border-radius */
+    }
+
+    body[data-theme='dark'] .panel {
+        background: var(--glass-bg-dark);
+        border: 1px solid var(--glass-border-dark);
+    }
+
+    body[data-theme='light'] .panel {
+        background: var(--glass-bg-light);
+        border: 1px solid var(--glass-border-light);
+    }
+
+    .input-panel {
+        flex-shrink: 0; /* Prevent shrinking */
+        width: 35%; /* Slightly wider input panel */
+        padding: 1.5rem;
+        transition: width 0.3s ease, flex-grow 0.3s ease;
+    }
+
+    .input-panel.expanded {
+        width: 100%;
+        flex-grow: 1; /* Allow it to grow */
+    }
+
+    .input-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-bottom: 1rem;
+        margin-bottom: 1rem;
+        border-bottom: 1px solid;
+    }
+    body[data-theme='dark'] .input-header { border-color: var(--glass-border-dark); }
+    body[data-theme='light'] .input-header { border-color: var(--glass-border-light); }
+
+    .input-header h2 {
+        margin-top: 0;
+        font-weight: 700;
+        font-size: 1.8rem; /* Larger heading */
+        border-bottom: none;
+        margin-bottom: 0;
+        padding-bottom: 0;
+    }
+
+    #speech-toggle-btn {
+        background: none;
+        border: none;
+        font-size: 1.8rem; /* Larger icon */
+        cursor: pointer;
+        opacity: 0.5;
+        transition: opacity 0.2s ease, transform 0.2s ease;
+        color: var(--primary-color); /* Use primary color */
+    }
+    #speech-toggle-btn.enabled {
+        opacity: 1;
+        transform: scale(1.1);
+    }
+    #speech-toggle-btn:hover {
+        opacity: 1;
+        transform: scale(1.1);
+    }
+
+    #ai-chat-log {
+        flex-grow: 1;
+        overflow-y: auto;
+        padding-right: 10px;
+        margin-bottom: 1rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem; /* Spacing between messages */
+    }
+
+    .ai-message {
+        padding: 0.85rem 1.2rem; /* Slightly more padding */
+        border-radius: 12px; /* Softer corners */
+        max-width: 90%;
+        line-height: 1.5;
+        align-self: flex-start;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1); /* Subtle shadow */
+    }
+
+    .user-message {
+        padding: 0.85rem 1.2rem;
+        border-radius: 12px;
+        max-width: 90%;
+        line-height: 1.5;
+        align-self: flex-end;
+        background-color: var(--primary-color);
+        color: white;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    body[data-theme='dark'] .ai-message {
+        background: rgba(255,255,255,0.1); /* Lighter background for dark theme AI message */
+        color: var(--text-color-dark);
+    }
+    body[data-theme='light'] .ai-message {
+        background: rgba(240,240,240,0.8); /* Slightly darker background for light theme AI message */
+        color: var(--text-color-light);
+    }
+
+    .prompt-area {
+        margin-top: auto;
+        padding-top: 1rem; /* Add padding above textarea */
+    }
+
+    textarea#prompt-input {
+        width: 100%;
+        height: 90px; /* Slightly taller */
+        resize: vertical; /* Allow vertical resize only */
+        border-radius: 10px; /* Softer corners */
+        padding: 1rem;
+        font-family: 'Inter', sans-serif; /* Use Inter font */
+        font-size: 1rem;
+        box-sizing: border-box;
+        transition: background 0.3s ease, border 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
+        border: 1px solid transparent; /* Start with transparent border */
+    }
+
+    body[data-theme='dark'] textarea#prompt-input {
+        background-color: var(--input-bg-dark);
+        color: var(--text-color-dark);
+        border-color: var(--glass-border-dark);
+    }
+    body[data-theme='light'] textarea#prompt-input {
+        background-color: var(--input-bg-light);
+        color: var(--text-color-light);
+        border-color: var(--glass-border-light);
+    }
+
+    textarea#prompt-input:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(var(--primary-color), 0.3); /* More prominent focus ring */
+    }
+
+    button#generate-btn {
+        width: 100%;
+        margin-top: 1.2rem; /* More space above button */
+        padding: 1rem 1.5rem; /* More padding */
+        background-color: var(--primary-color);
+        color: white;
+        border: none;
+        border-radius: 10px; /* Softer corners */
+        cursor: pointer;
+        font-size: 1.1rem; /* Larger font */
+        font-weight: 600; /* Bolder font */
+        transition: background-color 0.2s ease, transform 0.1s ease, box-shadow 0.2s ease;
+        box-shadow: 0 4px 15px rgba(var(--primary-color), 0.3); /* Subtle shadow */
+    }
+    button#generate-btn:hover {
+        background-color: var(--primary-color-hover);
+        box-shadow: 0 6px 20px rgba(var(--primary-color), 0.4);
+    }
+    button#generate-btn:active { transform: scale(0.98); }
+
+    .output-panel {
+        flex-grow: 1; /* Allow it to grow and take remaining space */
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden; /* Important for iframe/code-canvas */
+    }
+
+    .output-panel.hidden {
+        width: 0;
+        opacity: 0;
+        transform: translateX(100%);
+        pointer-events: none;
+        flex-grow: 0; /* Prevent it from taking space when hidden */
+    }
+
+    .output-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.75rem 1.5rem;
+        border-bottom: 1px solid;
+        flex-shrink: 0; /* Prevent header from shrinking */
+    }
+    body[data-theme='dark'] .output-header { border-color: var(--glass-border-dark); }
+    body[data-theme='light'] .output-header { border-color: var(--glass-border-light); }
+
+    .tab-btn {
+        background: none;
+        border: none;
+        padding: 0.75rem 1.2rem; /* More padding */
+        cursor: pointer;
+        font-size: 1rem;
+        font-weight: 500;
+        transition: opacity 0.2s ease, color 0.2s ease, border-bottom 0.2s ease;
+        border-bottom: 2px solid transparent;
+        position: relative; /* For active indicator */
+    }
+    body[data-theme='dark'] .tab-btn { color: var(--text-color-dark); opacity: 0.7; }
+    body[data-theme='light'] .tab-btn { color: var(--text-color-light); opacity: 0.7; }
+    .tab-btn.active {
+        opacity: 1;
+        font-weight: 600;
+        border-bottom: 2px solid var(--primary-color);
+    }
+    body[data-theme='dark'] .tab-btn.active { color: white; }
+    body[data-theme='light'] .tab-btn.active { color: #000; }
+
+    #theme-toggle {
+        background: none;
+        border: 1px solid;
+        border-radius: 50%;
+        width: 45px; /* Slightly larger */
+        height: 45px;
+        font-size: 1.6rem; /* Larger icon */
+        cursor: pointer;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        transition: background 0.2s ease, border-color 0.3s ease, transform 0.2s ease;
+    }
+    body[data-theme='dark'] #theme-toggle { border-color: var(--glass-border-dark); color: #fff; }
+    body[data-theme='light'] #theme-toggle { border-color: var(--glass-border-light); color: #000; }
+    body[data-theme='dark'] #theme-toggle:hover { background: rgba(255,255,255,0.15); transform: scale(1.05); }
+    body[data-theme='light'] #theme-toggle:hover { background: rgba(0,0,0,0.05); transform: scale(1.05); }
+
+    .view-content {
+        flex-grow: 1;
+        overflow: hidden;
+        padding: 1.5rem;
+        box-sizing: border-box;
+        display: flex; /* Ensure content panels fill space */
+    }
+    .content-panel {
+        width: 100%;
+        height: 100%;
+        display: none;
+        flex-direction: column; /* Ensure content within panel is column-flex */
+    }
+    .content-panel.active { display: flex; } /* Change to flex */
+
+    iframe#preview-output {
+        width: 100%;
+        height: 100%;
+        border: none;
+        border-radius: 12px; /* Softer corners */
+        background-color: #fff; /* Ensure white background for preview */
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1); /* Subtle shadow */
+    }
+
+    pre#code-canvas {
+        height: 100%;
+        box-sizing: border-box;
+        overflow: auto;
+        margin: 0;
+        border-radius: 12px; /* Softer corners */
+        padding: 1.2rem; /* More padding */
+        transition: background 0.3s ease, border 0.3s ease, box-shadow 0.3s ease;
+        white-space: pre-wrap; /* Ensure long lines wrap */
+        word-wrap: break-word;
+    }
+    body[data-theme='dark'] pre#code-canvas {
+        background-color: rgba(0,0,0,0.4); /* Slightly darker for better contrast */
+        border: 1px solid var(--glass-border-dark);
+        box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    }
+    body[data-theme='light'] pre#code-canvas {
+        background-color: rgba(255,255,255,0.6); /* Slightly more opaque */
+        border: 1px solid var(--glass-border-light);
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    code#code-output {
+        font-family: "SF Mono", "Fira Code", monospace;
+        font-size: 0.95rem; /* Slightly larger font */
+        white-space: pre-wrap;
+        word-wrap: break-word;
+        transition: color 0.3s ease;
+    }
+    body[data-theme='dark'] code#code-output { color: #c8d6f5; }
+    body[data-theme='light'] code#code-output { color: #1e293b; }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
         .container {
-            display: flex;
+            flex-direction: column;
+            padding: 1rem;
+            height: auto; /* Allow height to adjust on small screens */
+        }
+
+        .input-panel, .output-panel {
             width: 100%;
-            height: 100vh;
-            padding: 2rem;
-            box-sizing: border-box;
-            transition: all 0.3s ease; /* Add transition for smooth layout changes */
-        }
-
-        .panel {
-            border-radius: 16px;
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-            display: flex;
-            flex-direction: column;
-            transition: background 0.3s ease, border 0.3s ease;
-        }
-
-        body[data-theme='dark'] .panel {
-            background: var(--glass-bg-dark);
-            border: 1px solid var(--glass-border-dark);
-        }
-
-        body[data-theme='light'] .panel {
-            background: var(--glass-bg-light);
-            border: 1px solid var(--glass-border-light);
-        }
-
-        .input-panel {
-            width: 30%; /* Initial width */
-            margin-right: 2rem;
-            padding: 1.5rem;
-            transition: width 0.3s ease, margin-right 0.3s ease; /* Add transition */
-        }
-
-        .output-panel {
-            width: 70%; /* Initial width */
-            padding: 0;
-            display: flex; /* Change to flex to control visibility */
-            flex-direction: column;
-            transition: width 0.3s ease, opacity 0.3s ease, transform 0.3s ease; /* Add transition */
-        }
-
-        /* New CSS for hidden output panel */
-        .output-panel.hidden {
-            width: 0;
-            opacity: 0;
-            transform: translateX(100%); /* Move out of view */
-            margin-left: -2rem; /* Compensate for margin-right of input-panel */
-            pointer-events: none; /* Disable interactions */
+            margin-right: 0;
+            margin-bottom: 1rem; /* Add margin between panels */
         }
 
         .input-panel.expanded {
-            width: 100%; /* Take full width when output panel is hidden */
-            margin-right: 0;
+            width: 100%;
         }
+
+        .output-panel.hidden {
+            transform: translateY(100%); /* Slide down instead of right */
+            margin-left: 0;
+        }
+    }
+</style>
 </head>
 <body data-theme="dark">
     <div class="container">
@@ -216,8 +491,8 @@
             addAiMessage("안녕하세요! 어떤 웹 컴포넌트를 만들어 드릴까요? 자세히 설명해주세요.");
 
             // Initially hide the output panel and expand the input panel
-            document.querySelector('.output-panel').classList.add('hidden');
-            document.querySelector('.input-panel').classList.add('expanded');
+            // document.querySelector('.output-panel').classList.add('hidden');
+            // document.querySelector('.input-panel').classList.add('expanded');
         }
 
         // --- Gemini API Call Logic (Streaming) ---
