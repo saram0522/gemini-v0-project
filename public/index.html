@@ -575,11 +575,7 @@
                 generateBtn.disabled = false;
                 // After generation, keep the output panel visible.
                 // If you want to hide it again, uncomment the lines below:
-            }).catch(error => {
-                console.error('Fetch error caught:', error);
-                addAiMessage(`네트워크 오류: ${error.message}`);
-                generateBtn.disabled = false;
-            });
+            }
                 document.querySelector('.output-panel').classList.add('hidden');
                 document.querySelector('.input-panel').classList.add('expanded');
             }
