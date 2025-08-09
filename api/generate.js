@@ -45,7 +45,7 @@ module.exports = async (req, res) => {
     }
 
     // Use the non-streaming generateContent endpoint
-    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`;
+    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:streamGenerateContent?key=${apiKey}`;
 
     console.log('Before fetch call');
 
@@ -80,17 +80,51 @@ module.exports = async (req, res) => {
             return res.status(response.status).json({ error: `Gemini API error: ${errorText}` });
         }
 
-        // Parse the non-streaming JSON response
-        const data = await response.json(); // Use response.json() directly
-        let fullContent = '';
+        // 스트리밍 응답을 위해 Content-Type을 text/event-stream으로 설정
+        res.setHeader('Content-Type', 'text/event-stream');
+        res.setHeader('Cache-Control', 'no-cache');
+        res.setHeader('Connection', 'keep-alive');
 
-        if (data.candidates && Array.isArray(data.candidates) && data.candidates.length > 0) {
-            if (data.candidates[0].content && Array.isArray(data.candidates[0].content.parts) && data.candidates[0].content.parts.length > 0) {
-                fullContent = data.candidates[0].content.parts[0].text;
+        // Send initial JSON with isCode flag
+        res.write(JSON.stringify({ isCode: isCodeGenerationRequest }) + '\n');
+
+        const decoder = new TextDecoder();
+        let buffer = '';
+
+        for await (const chunk of response.body) {
+            buffer += decoder.decode(chunk, { stream: true });
+            let jsonStartIndex;
+            while ((jsonStartIndex = buffer.indexOf('{')) !== -1) {
+                let jsonEndIndex = -1;
+                let openBraceCount = 0;
+                for (let i = jsonStartIndex; i < buffer.length; i++) {
+                    if (buffer[i] === '{') {
+                        openBraceCount++;
+                    } else if (buffer[i] === '}') {
+                        openBraceCount--;
+                    }
+                    if (openBraceCount === 0 && buffer[i] === '}') {
+                        jsonEndIndex = i;
+                        break;
+                    }
+                }
+                if (jsonEndIndex !== -1) {
+                    const jsonString = buffer.substring(jsonStartIndex, jsonEndIndex + 1);
+                    try {
+                        const json = JSON.parse(jsonString);
+                        if (json.candidates && json.candidates[0].content.parts[0].text) {
+                            res.write(JSON.stringify({ text: json.candidates[0].content.parts[0].text }) + '\n');
+                        }
+                        buffer = buffer.substring(jsonEndIndex + 1).trim();
+                    } catch (e) {
+                        break; // Incomplete JSON or parsing error, wait for next chunk
+                    }
+                } else {
+                    break; // No complete JSON object found, wait for next chunk
+                }
             }
         }
-
-        res.status(200).json({ text: fullContent, isCode: isCodeGenerationRequest }); // Send isCode flag
+        res.end();
 
     } catch (error) {
         console.error('Serverless Function Error:', error);
