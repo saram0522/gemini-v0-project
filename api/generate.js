@@ -1,6 +1,7 @@
 const fetch = require('node-fetch');
 
 module.exports = async (req, res) => {
+    console.log('Function started');
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -42,6 +43,8 @@ module.exports = async (req, res) => {
     // 스트리밍을 위해 :streamGenerateContent 엔드포인트 사용
     const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:streamGenerateContent?key=${apiKey}`;
 
+    console.log('Before fetch call');
+
     const requestBody = {
         "contents": [{
             "parts": [{
@@ -64,9 +67,12 @@ module.exports = async (req, res) => {
             body: JSON.stringify(requestBody)
         });
 
+        console.log('After fetch call');
+
         if (!response.ok) {
             const errorText = await response.text();
             console.error('Gemini API Error:', errorText);
+            console.log('Response not OK');
             return res.status(response.status).json({ error: `Gemini API error: ${errorText}` });
         }
 
@@ -91,6 +97,7 @@ module.exports = async (req, res) => {
 
     } catch (error) {
         console.error('Serverless Function Error:', error);
+        console.log('Caught general error');
         res.status(500).json({ error: `Serverless function error: ${error.message}` });
     }
 };
