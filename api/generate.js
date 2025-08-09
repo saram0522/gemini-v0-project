@@ -22,15 +22,30 @@ module.exports = async (req, res) => {
         return res.status(400).json({ error: 'Prompt and API key are required' });
     }
 
-    
-    
+    // Reintroduce code generation logic, but with a more refined keyword list
+    let isCodeGenerationRequest = false;
+    // Refined code keywords - focus on explicit code/UI elements
+    const codeKeywords = ["html", "css", "javascript", "js", "code", "markup", "frontend", "ui", "ux", "component", "form", "button", "layout", "page", "section", "card", "modal", "navbar", "footer", "header", "table", "list", "gallery", "grid", "flexbox", "responsive", "style", "element", "structure"];
+    const lowerCasePrompt = prompt.toLowerCase();
 
-    
+    for (const keyword of codeKeywords) {
+        if (lowerCasePrompt.includes(keyword)) {
+            isCodeGenerationRequest = true;
+            break;
+        }
+    }
 
-    let geminiPromptText = prompt;
+    let geminiPromptText;
+    if (isCodeGenerationRequest) {
+        // Specific prompt for code generation
+        geminiPromptText = `Create a single, self-contained HTML file with modern, responsive, and clean design using inline CSS and JavaScript for the following component. Do not use any external libraries or frameworks. The entire output must be a single block of valid HTML code, starting with <!DOCTYPE html>. Component description: ${prompt}`;
+    } else {
+        // For general conversation, just pass the prompt as is.
+        geminiPromptText = prompt;
+    }
 
-    // 스트리밍을 위해 :streamGenerateContent 엔드포인트 사용
-    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:streamGenerateContent?key=${apiKey}`;
+    // Use the non-streaming generateContent endpoint
+    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`;
 
     console.log('Before fetch call');
 
@@ -65,13 +80,17 @@ module.exports = async (req, res) => {
             return res.status(response.status).json({ error: `Gemini API error: ${errorText}` });
         }
 
-        // 스트리밍 응답을 위해 Content-Type을 text/event-stream으로 설정
-        res.setHeader('Content-Type', 'text/event-stream');
-        res.setHeader('Cache-Control', 'no-cache');
-        res.setHeader('Connection', 'keep-alive');
+        // Parse the non-streaming JSON response
+        const data = await response.json(); // Use response.json() directly
+        let fullContent = '';
 
-        // Gemini API 응답 스트림을 클라이언트로 직접 파리핑
-        response.body.pipe(res);
+        if (data.candidates && Array.isArray(data.candidates) && data.candidates.length > 0) {
+            if (data.candidates[0].content && Array.isArray(data.candidates[0].content.parts) && data.candidates[0].content.parts.length > 0) {
+                fullContent = data.candidates[0].content.parts[0].text;
+            }
+        }
+
+        res.status(200).json({ text: fullContent, isCode: isCodeGenerationRequest }); // Send isCode flag
 
     } catch (error) {
         console.error('Serverless Function Error:', error);

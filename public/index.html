@@ -95,7 +95,7 @@
             msgElement.className = 'user-message';
             msgElement.textContent = message;
             aiChatLog.appendChild(msgElement);
-            aiChatLog.scrollTop = aiChatLog.scrollTop;
+            aiChatLog.scrollTop = aiChatLog.scrollHeight;
         }
 
         function addAiMessage(message) {
@@ -103,7 +103,7 @@
             msgElement.className = 'ai-message';
             msgElement.textContent = message;
             aiChatLog.appendChild(msgElement);
-            aiChatLog.scrollTop = aiChatLog.scrollTop;
+            aiChatLog.scrollTop = aiChatLog.scrollHeight;
         }
 
         // --- Gemini API Call Logic ---
@@ -156,6 +156,9 @@
                 } else if (error.message.includes("Server error")) {
                     userFacingMessage = `서버 오류가 발생했습니다: ${error.message.split('-')[1]?.trim() || error.message}`;
                     displayMessage = `Server Error: ${error.message}`;
+                } else if (error.message.includes("network")) {
+                    userFacingMessage = "네트워크 연결에 문제가 있습니다. 인터넷 연결을 확인해주세요.";
+                    displayMessage = `Network Error: ${error.message}`;;
                 }
 
                 addAiMessage(userFacingMessage);
