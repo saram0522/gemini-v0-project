@@ -70,7 +70,9 @@ module.exports = async (req, res) => {
             return res.status(response.status).json({ error: `Gemini API error: ${errorText}` });
         }
 
-        const data = await response.json();
+        const rawGeminiResponse = await response.text();
+        console.log('Raw Gemini API Response:', rawGeminiResponse);
+        const data = JSON.parse(rawGeminiResponse);
         let fullContent = '';
 
         if (data.candidates && Array.isArray(data.candidates)) {
