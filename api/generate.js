@@ -70,13 +70,22 @@ module.exports = async (req, res) => {
             return res.status(response.status).json({ error: `Gemini API error: ${errorText}` });
         }
 
-        // 스트리밍 응답을 위해 Content-Type을 text/event-stream으로 설정
-        res.setHeader('Content-Type', 'text/event-stream');
-        res.setHeader('Cache-Control', 'no-cache');
-        res.setHeader('Connection', 'keep-alive');
+        const data = await response.json();
+        let fullContent = '';
 
-        // 응답 스트림을 클라이언트로 파이핑
-        const decoder = new TextDecoder();        let buffer = '';        for await (const chunk of response.body) {            buffer += decoder.decode(chunk, { stream: true });            // 완전한 JSON 객체를 찾아서 처리            let jsonStartIndex;            while ((jsonStartIndex = buffer.indexOf('{')) !== -1) {                let jsonEndIndex = -1;                let openBraceCount = 0;                for (let i = jsonStartIndex; i < buffer.length; i++) {                    if (buffer[i] === '{') {                        openBraceCount++;                    } else if (buffer[i] === '}') {                        openBraceCount--;                    }                    if (openBraceCount === 0 && buffer[i] === '}') {                        jsonEndIndex = i;                        break;                    }                }                if (jsonEndIndex !== -1) {                    const jsonString = buffer.substring(jsonStartIndex, jsonEndIndex + 1);                    try {                        const json = JSON.parse(jsonString);                        res.write(JSON.stringify(json) + '\n'); // 각 JSON 객체를 줄바꿈으로 구분하여 전송                        buffer = buffer.substring(jsonEndIndex + 1).trim();                    } catch (e) {                        // 불완전한 JSON이거나 파싱 오류, 다음 청크를 기다림                        break;                    }                } else {                    // 완전한 JSON 객체를 찾지 못함, 다음 청크를 기다림                    break;                }            }        }        res.end();
+        if (data.candidates && Array.isArray(data.candidates)) {
+            for (const candidate of data.candidates) {
+                if (candidate.content && Array.isArray(candidate.content.parts)) {
+                    for (const part of candidate.content.parts) {
+                        if (part.text) {
+                            fullContent += part.text;
+                        }
+                    }
+                }
+            }
+        }
+
+        res.status(200).json({ text: fullContent });
 
     } catch (error) {
         console.error('Serverless Function Error:', error);
