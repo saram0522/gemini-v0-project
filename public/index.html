@@ -381,29 +381,11 @@
         <div class="panel input-panel">
             <div class="input-header">
                 <h2>AI Assistant</h2>
-                <button id="speech-toggle-btn">🔊</button>
             </div>
             <div id="ai-chat-log"></div>
             <div class="prompt-area">
-                <textarea id="prompt-input" placeholder="e.g., A modern login form with email and password fields..."></textarea>
-                <button id="generate-btn">Generate</button>
-            </div>
-        </div>
-        <div class="panel output-panel">
-            <div class="output-header">
-                <div class="tabs">
-                    <button class="tab-btn active" data-view="preview">Preview</button>
-                    <button class="tab-btn" data-view="code">Code</button>
-                </div>
-                <button id="theme-toggle">☀️</button>
-            </div>
-            <div class="view-content">
-                <div id="preview-panel" class="content-panel active">
-                    <iframe id="preview-output"></iframe>
-                </div>
-                <div id="code-panel" class="content-panel">
-                    <pre id="code-canvas"><code id="code-output"></code></pre>
-                </div>
+                <textarea id="prompt-input" placeholder="Type your message..."></textarea>
+                <button id="generate-btn">Send</button>
             </div>
         </div>
     </div>
@@ -413,57 +395,8 @@
         const generateBtn = document.getElementById('generate-btn');
         const promptInput = document.getElementById('prompt-input');
         const aiChatLog = document.getElementById('ai-chat-log');
-        const themeToggle = document.getElementById('theme-toggle');
-        const speechToggleBtn = document.getElementById('speech-toggle-btn');
 
-        // --- State ---
-        let isSpeechEnabled = false;
-
-        // --- Speech Synthesis ---
-        function speak(text) {
-            if (!isSpeechEnabled || !window.speechSynthesis) return;
-            window.speechSynthesis.cancel(); // Cancel any previous speech
-            const utterance = new SpeechSynthesisUtterance(text);
-            utterance.lang = 'ko-KR';
-            window.speechSynthesis.speak(utterance);
-        }
-
-        speechToggleBtn.addEventListener('click', () => {
-            isSpeechEnabled = !isSpeechEnabled;
-            speechToggleBtn.classList.toggle('enabled', isSpeechEnabled);
-            if (isSpeechEnabled) {
-                speak("AI 음성 활성화");
-            }
-        });
-
-        // --- Theme Switching Logic ---
-        function setInitialTheme() {
-            const savedTheme = localStorage.getItem('theme') || 'dark';
-            document.body.setAttribute('data-theme', savedTheme);
-            themeToggle.textContent = savedTheme === 'dark' ? '☀️' : '🌙';
-        }
-
-        themeToggle.addEventListener('click', () => {
-            let currentTheme = document.body.getAttribute('data-theme');
-            let newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-            document.body.setAttribute('data-theme', newTheme);
-            themeToggle.textContent = newTheme === 'dark' ? '☀️' : '🌙';
-            localStorage.setItem('theme', newTheme);
-        });
-
-        // --- View (Tab) Switching Logic ---
-        const tabs = document.querySelectorAll('.tab-btn');
-        const contentPanels = document.querySelectorAll('.content-panel');
-        tabs.forEach(tab => {
-            tab.addEventListener('click', () => {
-                tabs.forEach(t => t.classList.remove('active'));
-                contentPanels.forEach(p => p.classList.remove('active'));
-                tab.classList.add('active');
-                document.getElementById(`${tab.dataset.view}-panel`).classList.add('active');
-            });
-        });
-
-        // --- AI Chat & Initial State Logic ---
+        // --- AI Chat Logic ---
         function addUserMessage(message) {
             const msgElement = document.createElement('div');
             msgElement.className = 'user-message';
@@ -478,46 +411,37 @@
             msgElement.textContent = message;
             aiChatLog.appendChild(msgElement);
             aiChatLog.scrollTop = aiChatLog.scrollHeight;
-            speak(message);
         }
 
-        function setInitialView() {
-            addAiMessage("안녕하세요! 어떤 웹 컴포넌트를 만들어 드릴까요? 자세히 설명해주세요.");
-
-        // --- Gemini API Call Logic (Streaming) ---
+        // --- Gemini API Call Logic ---
         generateBtn.addEventListener('click', async () => {
             const prompt = promptInput.value.trim();
             if (!prompt) {
-                addAiMessage("Please describe the component you want to build first.");
+                addAiMessage("Please describe your request.");
                 return;
             }
 
             addUserMessage(prompt);
             promptInput.value = '';
 
-            // Show output panel and shrink input panel when generating
-            // document.querySelector('.output-panel').classList.remove('hidden');
-            // document.querySelector('.input-panel').classList.remove('expanded');
-
             const API_URL = '/api/generate';
 
-            
             addAiMessage("응답을 생성 중입니다...");
-            
             generateBtn.disabled = true;
-
-            
 
             console.log('Attempting to send fetch request...');
             console.log('Prompt value:', prompt);
             const requestBody = JSON.stringify({ prompt: prompt });
             console.log('Request body:', requestBody);
+
             try {
                 const response = await fetch(API_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: requestBody
                 });
+
+                console.log('After fetch call');
 
                 if (!response.ok) {
                     const errorData = await response.json();
@@ -528,8 +452,6 @@
                 if (data.text) {
                     addAiMessage(data.text);
                 }
-
-            addAiMessage(data.text);
 
             } catch (error) {
                 let userFacingMessage = "죄송합니다. 응답 생성 중 알 수 없는 오류가 발생했습니다.";
@@ -547,20 +469,17 @@
                 }
 
                 addAiMessage(userFacingMessage);
+                console.error('Fetch error caught:', error);
             } finally {
                 generateBtn.disabled = false;
-                // After generation, keep the output panel visible.
-                // If you want to hide it again, uncomment the lines below:
-                // document.querySelector('.output-panel').classList.add('hidden');
-                // document.querySelector('.input-panel').classList.add('expanded');
             }
         });
 
         // --- Initialize App ---
         window.onload = () => {
-            setInitialTheme();
-            setInitialView();
+            addAiMessage("안녕하세요! 무엇을 도와드릴까요?");
         };
     </script>
+</body>
 </body>
 </html>
