@@ -22,26 +22,15 @@ module.exports = async (req, res) => {
         return res.status(400).json({ error: 'Prompt and API key are required' });
     }
 
-    let isCodeGenerationRequest = false;
-    const codeKeywords = ["create", "generate", "html", "component", "design", "form", "button", "layout", "page", "section", "card", "modal", "navbar", "footer", "header", "table", "list", "gallery", "grid", "flexbox", "responsive", "style", "css", "javascript", "js", "interactive", "animation", "effect", "element", "structure", "build", "make", "develop", "implement", "code", "markup", "frontend", "ui", "ux"];
-    const lowerCasePrompt = prompt.toLowerCase();
+    
+    
 
-    for (const keyword of codeKeywords) {
-        if (lowerCasePrompt.includes(keyword)) {
-            isCodeGenerationRequest = true;
-            break;
-        }
-    }
+    
 
-    let geminiPromptText;
-    if (isCodeGenerationRequest) {
-        geminiPromptText = `Create a single, self-contained HTML file with modern, responsive, and clean design using inline CSS and JavaScript for the following component. Do not use any external libraries or frameworks. The entire output must be a single block of valid HTML code, starting with <!DOCTYPE html>. Component description: ${prompt}`;
-    } else {
-        geminiPromptText = prompt; // For general conversation, just pass the prompt as is.
-    }
+    let geminiPromptText = prompt;
 
     // 스트리밍을 위해 :streamGenerateContent 엔드포인트 사용
-    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:streamGenerateContent?key=${apiKey}`;
+    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`;
 
     console.log('Before fetch call');
 
@@ -79,19 +68,7 @@ module.exports = async (req, res) => {
         const rawGeminiResponse = await response.text();
         console.log('Raw Gemini API Response:', rawGeminiResponse);
         const data = JSON.parse(rawGeminiResponse);
-        let fullContent = '';
-
-        if (data.candidates && Array.isArray(data.candidates)) {
-            for (const candidate of data.candidates) {
-                if (candidate.content && Array.isArray(candidate.content.parts)) {
-                    for (const part of candidate.content.parts) {
-                        if (part.text) {
-                            fullContent += part.text;
-                        }
-                    }
-                }
-            }
-        }
+        let fullContent = data.candidates[0].content.parts[0].text;
 
         res.status(200).json({ text: fullContent });
 

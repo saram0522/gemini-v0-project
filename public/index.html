@@ -412,8 +412,6 @@
         // --- DOM Elements ---
         const generateBtn = document.getElementById('generate-btn');
         const promptInput = document.getElementById('prompt-input');
-        const previewOutput = document.getElementById('preview-output');
-        const codeOutput = document.getElementById('code-output');
         const aiChatLog = document.getElementById('ai-chat-log');
         const themeToggle = document.getElementById('theme-toggle');
         const speechToggleBtn = document.getElementById('speech-toggle-btn');
@@ -484,16 +482,7 @@
         }
 
         function setInitialView() {
-            document.getElementById('preview-panel').classList.add('active');
-            document.querySelector('.tab-btn[data-view="preview"]').classList.add('active');
-            codeOutput.textContent = "Your generated code will appear here.";
-            previewOutput.srcdoc = `<div style="display: flex; justify-content: center; align-items: center; height: 100%; font-family: Inter, sans-serif; color: #999;">Your component preview will appear here.</div>`;
             addAiMessage("안녕하세요! 어떤 웹 컴포넌트를 만들어 드릴까요? 자세히 설명해주세요.");
-
-            // Initially hide the output panel and expand the input panel
-            // document.querySelector('.output-panel').classList.add('hidden');
-            // document.querySelector('.input-panel').classList.add('expanded');
-        }
 
         // --- Gemini API Call Logic (Streaming) ---
         generateBtn.addEventListener('click', async () => {
@@ -507,19 +496,17 @@
             promptInput.value = '';
 
             // Show output panel and shrink input panel when generating
-            document.querySelector('.output-panel').classList.remove('hidden');
-            document.querySelector('.input-panel').classList.remove('expanded');
+            // document.querySelector('.output-panel').classList.remove('hidden');
+            // document.querySelector('.input-panel').classList.remove('expanded');
 
             const API_URL = '/api/generate';
 
             
             addAiMessage("응답을 생성 중입니다...");
-            codeOutput.textContent = '';
-            previewOutput.srcdoc = `<div style="display: flex; justify-content: center; align-items: center; height: 100%; font-family: Inter, sans-serif; color: #555;">Generating...</div>`;
+            
             generateBtn.disabled = true;
 
-            let fullHtmlContent = ''; // Declare fullHtmlContent here
-            let isHtmlResponse = false; // Declare isHtmlResponse here
+            
 
             console.log('Attempting to send fetch request...');
             console.log('Prompt value:', prompt);
@@ -539,23 +526,14 @@
 
                 const data = await response.json();
                 if (data.text) {
-                    if (data.text.startsWith('<!DOCTYPE html>') || isHtmlResponse) {
-                        isHtmlResponse = true;
-                        fullHtmlContent = data.text;
-                        const finalCleanHtml = fullHtmlContent.replace(/^```html\s*|```\s*$/g, '').trim();
-                        codeOutput.textContent = finalCleanHtml;
-                        previewOutput.srcdoc = finalCleanHtml;
-                        addAiMessage("컴포넌트 코드 작성이 완료되었습니다! 'Code' 탭에서 전체 코드를 확인하시고, 'Preview' 탭에서 결과를 바로 확인하실 수 있습니다.");
-                    } else {
-                        addAiMessage(data.text);
-                        document.querySelector('.output-panel').classList.add('hidden');
-                        document.querySelector('.input-panel').classList.add('expanded');
-                    }
+                    addAiMessage(data.text);
                 }
 
+            addAiMessage(data.text);
+
             } catch (error) {
-                let userFacingMessage = "죄송합니다. 컴포넌트 생성 중 알 수 없는 오류가 발생했습니다.";
-                let displayMessage = `Error generating code: ${error.message}`;
+                let userFacingMessage = "죄송합니다. 응답 생성 중 알 수 없는 오류가 발생했습니다.";
+                let displayMessage = `Error: ${error.message}`;
 
                 if (error.message.includes("400") && error.message.includes("API key are required")) {
                     userFacingMessage = "API 키가 설정되지 않았거나 유효하지 않습니다. Vercel 환경 변수를 확인해주세요.";
@@ -568,16 +546,13 @@
                     displayMessage = `Network Error: ${error.message}`;
                 }
 
-                codeOutput.textContent = displayMessage;
-                previewOutput.srcdoc = `<div style="font-family: sans-serif; text-align: center; padding: 2rem; color: red;">${userFacingMessage}</div>`;
                 addAiMessage(userFacingMessage);
             } finally {
                 generateBtn.disabled = false;
                 // After generation, keep the output panel visible.
                 // If you want to hide it again, uncomment the lines below:
-            }
-                document.querySelector('.output-panel').classList.add('hidden');
-                document.querySelector('.input-panel').classList.add('expanded');
+                // document.querySelector('.output-panel').classList.add('hidden');
+                // document.querySelector('.input-panel').classList.add('expanded');
             }
         });
 
