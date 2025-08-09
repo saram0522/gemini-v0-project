@@ -30,7 +30,7 @@ module.exports = async (req, res) => {
     let geminiPromptText = prompt;
 
     // 스트리밍을 위해 :streamGenerateContent 엔드포인트 사용
-    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`;
+    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:streamGenerateContent?key=${apiKey}`;
 
     console.log('Before fetch call');
 
@@ -65,12 +65,13 @@ module.exports = async (req, res) => {
             return res.status(response.status).json({ error: `Gemini API error: ${errorText}` });
         }
 
-        const rawGeminiResponse = await response.text();
-        console.log('Raw Gemini API Response:', rawGeminiResponse);
-        const data = JSON.parse(rawGeminiResponse);
-        let fullContent = data.candidates[0].content.parts[0].text;
+        // 스트리밍 응답을 위해 Content-Type을 text/event-stream으로 설정
+        res.setHeader('Content-Type', 'text/event-stream');
+        res.setHeader('Cache-Control', 'no-cache');
+        res.setHeader('Connection', 'keep-alive');
 
-        res.status(200).json({ text: fullContent });
+        // Gemini API 응답 스트림을 클라이언트로 직접 파리핑
+        response.body.pipe(res);
 
     } catch (error) {
         console.error('Serverless Function Error:', error);
