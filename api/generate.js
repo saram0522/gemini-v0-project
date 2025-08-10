@@ -22,25 +22,42 @@ module.exports = async (req, res) => {
         return res.status(400).json({ error: 'Prompt and API key are required' });
     }
 
-    // Reintroduce code generation logic, but with a more refined keyword list
-    let isCodeGenerationRequest = false;
-    // Refined code keywords - focus on explicit code/UI elements
-    const codeKeywords = ["html", "css", "javascript", "js", "code", "markup", "frontend", "ui", "ux", "component", "form", "button", "layout", "page", "section", "card", "modal", "navbar", "footer", "header", "table", "list", "gallery", "grid", "flexbox", "responsive", "style", "element", "structure"];
+    let codeRequestType = 'none'; // none, html, python, etc.
     const lowerCasePrompt = prompt.toLowerCase();
 
-    for (const keyword of codeKeywords) {
+    // Check for renderable code (HTML/CSS/JS)
+    const renderableKeywords = ["html", "css", "javascript", "js", "component", "form", "button", "layout", "page", "section", "card", "modal", "navbar", "footer", "header", "table", "list", "gallery", "grid", "flexbox", "responsive", "style", "element", "structure"];
+    for (const keyword of renderableKeywords) {
         if (lowerCasePrompt.includes(keyword)) {
-            isCodeGenerationRequest = true;
+            codeRequestType = 'html';
             break;
         }
     }
 
+    // If not renderable, check for other code types
+    if (codeRequestType === 'none') {
+        const otherCodeKeywords = { // Add more languages as needed
+            'python': ["python", "py"],
+            'javascript': ["javascript", "js"]
+        };
+
+        for (const [type, keywords] of Object.entries(otherCodeKeywords)) {
+            for (const keyword of keywords) {
+                if (lowerCasePrompt.includes(keyword)) {
+                    codeRequestType = type;
+                    break;
+                }
+            }
+            if (codeRequestType !== 'none') break;
+        }
+    }
+
     let geminiPromptText;
-    if (isCodeGenerationRequest) {
-        // Specific prompt for code generation
+    if (codeRequestType === 'html') {
         geminiPromptText = `Create a single, self-contained HTML file with modern, responsive, and clean design using inline CSS and JavaScript for the following component. Do not use any external libraries or frameworks. The entire output must be a single block of valid HTML code, starting with <!DOCTYPE html>. Component description: ${prompt}`;
+    } else if (codeRequestType !== 'none') {
+        geminiPromptText = `Generate a code snippet for the following prompt in ${codeRequestType}. Only output the code, without any explanation or markdown formatting.`;
     } else {
-        // For general conversation, just pass the prompt as is.
         geminiPromptText = prompt;
     }
 
@@ -86,7 +103,7 @@ module.exports = async (req, res) => {
         res.setHeader('Connection', 'keep-alive');
 
         // Send initial JSON with isCode flag
-        res.write(JSON.stringify({ isCode: isCodeGenerationRequest }) + '\n');
+        res.write(JSON.stringify({ codeType: codeRequestType }) + '\n');
 
         const decoder = new TextDecoder();
         let buffer = '';

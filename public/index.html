@@ -581,18 +581,14 @@
                     const { value, done } = await reader.read();
                     if (done) break;
 
-                    try {
-                        const json = JSON.parse(value);
-                        if (json.text && displayElement) {
-                            displayElement.textContent += json.text;
-                            if (!isCodeResponse) {
-                                aiChatLog.scrollTop = aiChatLog.scrollHeight; // Keep scrolling to bottom for chat
-                            } else {
-                                codeOutput.scrollTop = codeOutput.scrollHeight; // Keep scrolling for code
-                            }
+                    // Each 'value' is a chunk of text from the stream
+                    if (displayElement) {
+                        displayElement.textContent += value;
+                        if (!isCodeResponse) {
+                            aiChatLog.scrollTop = aiChatLog.scrollHeight; // Keep scrolling to bottom for chat
+                        } else {
+                            codeOutput.scrollTop = codeOutput.scrollHeight; // Keep scrolling for code
                         }
-                    } catch (e) {
-                        console.warn("Could not parse JSON chunk:", value, e);
                     }
                 }
 
@@ -632,3 +628,4 @@
         };
     </script>
 </body>
+</html>
